@@ -29,7 +29,7 @@
     "contains_non_public_inventory": true,
     "digest": "sha256:500a736f200733608d914d5984b30b539c3df04f69a9d68053fbcf7e20d729be",
     "path": "owners/ORESoftware.json",
-    "repository": "ORESoftware/project-registry"
+    "repository": "approved-private-registry"
   },
   "relationships": [
     {
