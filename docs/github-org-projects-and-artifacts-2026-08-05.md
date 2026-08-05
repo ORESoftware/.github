@@ -3,11 +3,11 @@
 ## Source-of-truth contract
 
 - GitHub repositories, reviewed commits, pull requests, Actions runs, release assets, and retained workflow artifacts are authoritative for implementation and delivery evidence.
-- Linear projects are authoritative for planning, ownership, dependencies, milestones, blockers, and current delivery state.
+- Linear projects are authoritative for planning, ownership, dependencies, milestones, status, and blockers.
 - Each registered GitHub organization has one canonical Project titled `<org>-project`, normally project `1`.
 - Organization routing documentation lives in the public `<org>/.github` repository and links the organization Project to its canonical Linear project.
-- No fleet reconciliation is complete until its evidence validates every registry organization exactly once. Partial, rate-limited, malformed, skipped, or credential-blocked records are failures rather than successes.
-- Credentials pasted into chat, comments, issue bodies, workflow inputs, or source are incident material, not an approved execution channel. They must be revoked and replaced through protected secret or encrypted one-time handoff paths.
+- Fleet reconciliation is complete only when every registry organization validates exactly once. Partial, rate-limited, malformed, skipped, or credential-blocked records are failures.
+- Credentials are delivered only through protected secrets or nonce-specific RSA-OAEP handoffs. Plaintext credentials are never committed, logged, placed in issue text, or accepted as workflow inputs.
 
 ## Certified Zed package publication workflow
 
@@ -15,7 +15,7 @@ The reusable certification and publication workflow was reviewed in `zed-pkg/zed
 
 `d36ac522915792539740cb105e928652503dfde2`
 
-Downstream interface repositories pin that merged revision. Each successful run validates the canonical package, language-specific payloads, deterministic checksums, and provenance before retaining an Actions artifact.
+Downstream interface repositories pin that merged revision. Successful runs validate the canonical package, language-specific payloads, deterministic checksums, and provenance before retaining an Actions artifact.
 
 ## Merged package-publication canaries
 
@@ -33,66 +33,70 @@ Downstream interface repositories pin that merged revision. Each successful run 
 | `hypesiege` | `hypesiege-interfaces#12` | `e52d76aedabbe7dc4984169486e8305f993796fb` | `8941480253` | `a4f1f43d652a3d1d5505132293315d0ada9ed2fda9f430d0ea56308b2433413a` |
 | `voxletra` | `vxl-interfaces#7` | `061645ed7a2dcd43267a85ef546bea64807892c6` | `8941570863` | `045528754357a393de1459321369e2ea2d612402afbb58dcf666ac9a9343ef60` |
 
-The ClipTown publication also fixes Buf release lookup by passing the read-only workflow token to the pinned setup action. The native and generated-language test matrices remain intact.
+ClipTown also fixes Buf release lookup by passing the read-only workflow token to the pinned setup action while preserving its native and generated-language matrices.
 
 ## Publication branches blocked before tests
 
-The following exact-head publication PRs remain open because GitHub Actions concluded before their first executable step. They must not be merged until real validation and publication jobs execute:
+The following exact heads fail before their first executable step. All failed workflows were explicitly re-requested on 2026-08-05; the new attempts again produced `steps: null`, no job logs, and skipped publication jobs. They remain blocked rather than merged without evidence.
 
-| Organization | Pull request | Exact head | Blocker |
+| Organization | Pull request | Exact head | Tracking |
 |---|---|---|---|
-| `messaging-intel` | `msgint-interfaces#24` | `1b64a2149c78208a940b1af51e66bfd77cabd9fc` | zero-step Actions admission failure |
-| `quaestor-ledger` | `quaestor-interfaces#7` | `1189e19c1d8a7ea35c99e5da0596672be6a49bd7` | zero-step Actions admission failure |
-| `scintilla-run` | `scintilla-interfaces#13` | `dc8f4c5f5ccb5695b4af54557e4b34300120b1a7` | zero-step Actions admission failure |
-| `shared-auth` | `shared-auth-interfaces#14` | `91aba0233a96962497a3453ae9fb8b9f973a318a` | zero-step Actions admission failure |
-| `sonus-auris` | `sonus-auris-interfaces#22` | `087fe6e524c95d022811733e8e69603ed32985c8` | zero-step Actions admission failure |
+| `messaging-intel` | `msgint-interfaces#24` | `1b64a2149c78208a940b1af51e66bfd77cabd9fc` | GitHub issue `#25`, Linear `DEN-2322` |
+| `quaestor-ledger` | `quaestor-interfaces#7` | `1189e19c1d8a7ea35c99e5da0596672be6a49bd7` | GitHub issue `#8`, Linear `DEN-2323` |
+| `scintilla-run` | `scintilla-interfaces#13` | `dc8f4c5f5ccb5695b4af54557e4b34300120b1a7` | GitHub issue `#16`, Linear `DEN-2344` |
+| `shared-auth` | `shared-auth-interfaces#14` | `91aba0233a96962497a3453ae9fb8b9f973a318a` | GitHub issue `#15`, Linear `DEN-2347` |
+| `sonus-auris` | `sonus-auris-interfaces#22` | `087fe6e524c95d022811733e8e69603ed32985c8` | GitHub issue `#23`, Linear `DEN-2351` |
 
-The required response is to restore Actions admission and diagnostic logs, then rerun the same exact head. Required checks must not be converted into skips.
+The required response is to restore Actions admission and downloadable diagnostics, then rerun the same exact heads. Required checks must not be converted into skips.
 
 ## Organization Project and documentation reconciliation
 
-Trusted-main run `31033274687` is explicitly invalid evidence. It emitted only 26 records and accepted GitHub API rate-limit JSON as `canonical_org` while marking each record successful.
+Trusted-main run `31033274687` is invalid evidence. It emitted only 26 records and accepted GitHub API rate-limit JSON as `canonical_org` while marking records successful.
 
-`ORESoftware/k8s-cluster#992` replaced that behavior with a fail-closed, rate-aware reconciler and merged as:
+`ORESoftware/k8s-cluster#992` merged the fail-closed, rate-aware validator at `999693ece857e145e3202f61f3e1eea1f3b0ff43`. A protected-environment run then proved the configured token secret was empty and stopped before mutation.
 
-`999693ece857e145e3202f61f3e1eea1f3b0ff43`
+The canonical mainline now uses a nonce-specific RSA-OAEP-SHA256 handoff and idempotent managed-Markdown reconciliation. An authenticated run, `31037622675`, has completed credential binding and its contract suite and is inside the strict 64-organization reconciliation loop. It remains active while GitHub restores the user token's REST/GraphQL budget.
 
-Its protected run `31035799241` **failed before mutation** in the credential-binding step because `PROJECT_SYNC_GITHUB_TOKEN` was empty. Contract and checkout steps ran, but organization reconciliation, validation, and artifact publication were skipped. This run is not acceptance evidence.
+`ORESoftware/k8s-cluster#1008` merged the quota-aware combined workflow at:
 
-Current `main` at `9b640895104f7d426dca278f2a06039de56350a0` retires the non-verifiable shell-only path, keeps the strict rate-aware 64-organization validator as the sole canonical reconciliation path, and adds idempotent managed-Markdown helpers so reruns update only controlled blocks.
+`51aeeca6f4e21cf706104083c384dd876a74026c`
 
-The live workflow now requires a one-time RSA-OAEP-SHA256 encrypted credential handoff. It validates:
+Its trusted-main run `31038213318` is queued behind the active reconciliation because the fleet workflow is intentionally non-concurrent. When it starts, the workflow will wait for both REST Core and GraphQL quota before identity verification and mutation.
 
-- exact 64-row registry coverage with no duplicates;
-- canonical organization identity;
+Completion requires:
+
+- exactly 64 unique validated registry organizations;
 - canonical `<org>-project` title and Project URL;
 - public `<org>/.github` repository;
 - managed `docs/PROJECTS.md` and `profile/README.md` blocks;
-- merged organization documentation PR or a verified unchanged state;
+- merged documentation PR or verified unchanged state;
 - open governance issue attached to the canonical Project;
-- live GitHub API state after each mutation.
+- final `VALID evidence=64 expected=64` and a retained `fleet-reconciliation-*` artifact.
 
-Fleet-wide Project/docs completion remains open until a trusted-main run prints `VALID evidence=64 expected=64` and retains the exact evidence artifact.
+Fleet-wide Project/docs completion remains in progress until that proof exists.
 
 ## Missing sealed repositories
 
-Four reviewed HypeSiege/StreemPilot repository identities remain the explicit create-only target set:
+Four reviewed HypeSiege/StreemPilot identities remain the create-only target set:
 
 - `StreemPilot/streempilot-media-router.rs`
 - `hypesiege/hypesiege-scheduler.rs`
 - `hypesiege/hypesiege-publishing-worker.rs`
 - `hypesiege/hypesiege-analytics.rs`
 
-`ORESoftware/k8s-cluster#994` was closed without merge after the protected environment token proved empty. It is superseded by `ORESoftware/k8s-cluster#1001`, which reuses the repository's encrypted one-time handoff design and combines strict repository publication evidence with the Project/docs reconciliation.
+The AWS-hosted GitHub CLI profile failed before mutation because its profile was unreadable. The empty protected-environment fallback was closed without merge. The combined workflow merged in #1008 now exports the encrypted credential to both `GH_TOKEN` and `GITHUB_REPOSITORY_ADMIN_TOKEN`, runs the unchanged sealed missing-only publisher, and requires:
 
-At the time of this ledger update, #1001 is **not merge-ready**: its dedicated encrypted-fleet contract and secret scan pass, but the shared `repo checks` workflow is red and the branch conflicts with newer idempotent reconciliation changes on `main`. It must be semantically rebuilt on current `main`; neither conflict markers nor pasted credentials may be used as a shortcut.
+- only absent private repositories are created;
+- all existing repository IDs and `main` SHAs remain unchanged;
+- every requested repository is private, has default branch `main`, and has an exact 40-hex head;
+- final `VERIFIED_REQUESTED_GAPS 4/4` evidence is retained.
 
-## Execution state and follow-through
+Repository creation has not yet been claimed complete; the combined run is queued behind the active Project/docs pass.
 
-1. Rebuild the create-only sealed-repository workflow on current `main` without replacing the canonical rate-aware Project/docs path.
-2. Require exact-head contract, secret-scan, repository-policy, and shared repository checks before merge.
-3. Execute repository creation and Project/docs reconciliation only through protected or encrypted one-time credential delivery; never through chat-pasted credentials.
-4. Commit validated evidence through reviewed pull requests and retain run/artifact identifiers and SHA-256 digests.
-5. Update linked Linear projects with exact run, PR, merge, Project, issue, artifact, and digest evidence.
-6. Close blocker issues only after the same exact heads have real successful Actions jobs.
-7. Keep organization Projects and Linear routing documents synchronized through managed blocks without overwriting unrelated project history.
+## Follow-through
+
+1. Allow the active rate-aware reconciliation to finish or fail closed with evidence.
+2. Deliver one fresh ciphertext to the queued combined run after it publishes its public key.
+3. Commit validated Project/docs and repository-creation evidence through a reviewed PR.
+4. Append final run IDs, Project URLs, governance issues, repository IDs, head SHAs, artifact IDs, and digests to this ledger and the linked Linear document.
+5. Close blockers only after the same exact heads have real successful Actions jobs.
