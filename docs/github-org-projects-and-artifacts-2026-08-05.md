@@ -6,7 +6,8 @@
 - Linear projects are authoritative for planning, ownership, dependencies, milestones, blockers, and current delivery state.
 - Each registered GitHub organization has one canonical Project titled `<org>-project`, normally project `1`.
 - Organization routing documentation lives in the public `<org>/.github` repository and links the organization Project to its canonical Linear project.
-- No fleet reconciliation is complete until its evidence validates every registry organization exactly once. Partial, rate-limited, malformed, or skipped records are failures rather than successes.
+- No fleet reconciliation is complete until its evidence validates every registry organization exactly once. Partial, rate-limited, malformed, skipped, or credential-blocked records are failures rather than successes.
+- Credentials pasted into chat, comments, issue bodies, workflow inputs, or source are incident material, not an approved execution channel. They must be revoked and replaced through protected secret or encrypted one-time handoff paths.
 
 ## Certified Zed package publication workflow
 
@@ -52,39 +53,46 @@ The required response is to restore Actions admission and diagnostic logs, then 
 
 Trusted-main run `31033274687` is explicitly invalid evidence. It emitted only 26 records and accepted GitHub API rate-limit JSON as `canonical_org` while marking each record successful.
 
-`ORESoftware/k8s-cluster#992` replaces that behavior with a fail-closed, rate-aware reconciler. Merge SHA:
+`ORESoftware/k8s-cluster#992` replaced that behavior with a fail-closed, rate-aware reconciler and merged as:
 
 `999693ece857e145e3202f61f3e1eea1f3b0ff43`
 
-Protected run `31035799241` performs one-organization-at-a-time reconciliation using the `portfolio-project-sync` GitHub Environment. It validates:
+Its protected run `31035799241` **failed before mutation** in the credential-binding step because `PROJECT_SYNC_GITHUB_TOKEN` was empty. Contract and checkout steps ran, but organization reconciliation, validation, and artifact publication were skipped. This run is not acceptance evidence.
+
+Current `main` at `9b640895104f7d426dca278f2a06039de56350a0` retires the non-verifiable shell-only path, keeps the strict rate-aware 64-organization validator as the sole canonical reconciliation path, and adds idempotent managed-Markdown helpers so reruns update only controlled blocks.
+
+The live workflow now requires a one-time RSA-OAEP-SHA256 encrypted credential handoff. It validates:
 
 - exact 64-row registry coverage with no duplicates;
 - canonical organization identity;
 - canonical `<org>-project` title and Project URL;
 - public `<org>/.github` repository;
-- managed `docs/PROJECTS.md` and `profile/README.md` documents;
+- managed `docs/PROJECTS.md` and `profile/README.md` blocks;
 - merged organization documentation PR or a verified unchanged state;
 - open governance issue attached to the canonical Project;
 - live GitHub API state after each mutation.
 
-The run is complete only when it prints `VALID evidence=64 expected=64` and uploads the validated evidence artifact. Until then, fleet-wide Project/docs completion remains in progress.
+Fleet-wide Project/docs completion remains open until a trusted-main run prints `VALID evidence=64 expected=64` and retains the exact evidence artifact.
 
 ## Missing sealed repositories
 
-Four reviewed HypeSiege/StreemPilot repository identities were absent:
+Four reviewed HypeSiege/StreemPilot repository identities remain the explicit create-only target set:
 
 - `StreemPilot/streempilot-media-router.rs`
 - `hypesiege/hypesiege-scheduler.rs`
 - `hypesiege/hypesiege-publishing-worker.rs`
 - `hypesiege/hypesiege-analytics.rs`
 
-The AWS-hosted GitHub CLI profile path failed cleanly before mutation because its profile was no longer readable. `ORESoftware/k8s-cluster#994` uses the protected `portfolio-project-sync` environment token to run the unchanged sealed, create-only publisher. It prohibits force pushes and visibility patches, creates only missing private repositories, verifies newly created sealed roots, proves all pre-existing repository IDs and `main` SHAs stayed unchanged, and retains the exact publication log and remote-state JSON.
+`ORESoftware/k8s-cluster#994` was closed without merge after the protected environment token proved empty. It is superseded by `ORESoftware/k8s-cluster#1001`, which reuses the repository's encrypted one-time handoff design and combines strict repository publication evidence with the Project/docs reconciliation.
 
-## Follow-through
+At the time of this ledger update, #1001 is **not merge-ready**: its dedicated encrypted-fleet contract and secret scan pass, but the shared `repo checks` workflow is red and the branch conflicts with newer idempotent reconciliation changes on `main`. It must be semantically rebuilt on current `main`; neither conflict markers nor pasted credentials may be used as a shortcut.
 
-After the two protected runs complete:
+## Execution state and follow-through
 
-1. commit the validated Project/docs and repository-creation evidence through reviewed pull requests;
-2. update the linked Linear projects with exact run, PR, merge, Project, issue, artifact, and digest evidence;
-3. close blocker issues only after the same exact heads have real successful Actions jobs;
-4. keep organization Projects and Linear routing documents synchronized through managed blocks without overwriting unrelated project history.
+1. Rebuild the create-only sealed-repository workflow on current `main` without replacing the canonical rate-aware Project/docs path.
+2. Require exact-head contract, secret-scan, repository-policy, and shared repository checks before merge.
+3. Execute repository creation and Project/docs reconciliation only through protected or encrypted one-time credential delivery; never through chat-pasted credentials.
+4. Commit validated evidence through reviewed pull requests and retain run/artifact identifiers and SHA-256 digests.
+5. Update linked Linear projects with exact run, PR, merge, Project, issue, artifact, and digest evidence.
+6. Close blocker issues only after the same exact heads have real successful Actions jobs.
+7. Keep organization Projects and Linear routing documents synchronized through managed blocks without overwriting unrelated project history.
