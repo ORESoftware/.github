@@ -1,0 +1,30 @@
+name: Backfill cache-warmer Project cards
+
+on:
+  workflow_dispatch:
+    inputs:
+      status:
+        description: Project Status value
+        required: true
+        default: Backlog
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ secrets.ORE_PROJECTS_TOKEN }}
+      PROJECT_OWNER: ORESoftware
+      PROJECT_NUMBER: "1"
+      PROJECT_STATUS: ${{ inputs.status }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify token is configured
+        shell: bash
+        run: test -n "${GH_TOKEN}" || { echo 'Missing ORE_PROJECTS_TOKEN secret' >&2; exit 1; }
+      - name: Add epic and implementation issue to Project #1
+        run: scripts/backfill-cache-warmer-project.sh
