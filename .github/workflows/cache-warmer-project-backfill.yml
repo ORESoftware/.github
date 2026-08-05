@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   backfill:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     env:
       GH_TOKEN: ${{ secrets.ORE_PROJECTS_TOKEN }}
@@ -22,7 +22,9 @@ jobs:
       PROJECT_NUMBER: "1"
       PROJECT_STATUS: ${{ inputs.status }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - name: Verify token is configured
         shell: bash
         run: test -n "${GH_TOKEN}" || { echo 'Missing ORE_PROJECTS_TOKEN secret' >&2; exit 1; }
