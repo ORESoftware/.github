@@ -1,5 +1,6 @@
 # ORESoftware portfolio documentation
 
+- [Canonical `/des` route delivery and project routing](./des-route-project-delivery-2026-08-05.md)
 - [ChatGPT backlog reconciliation — 60-chat window](./chatgpt-backlog-reconciliation-2026-08-03.md)
 - [Reconciled 60-item task inventory (CSV)](./chatgpt-task-inventory-reconciled-2026-08-03.csv)
 - [GitHub organization, GitHub Project, and Linear registry](./github-linear-project-registry.md)
