@@ -3,7 +3,7 @@
 **Status:** rollout standard / pilot implementation in review  
 **Linear:** DEN-2636 parent, DEN-2637 implementation, DEN-2638 CI gates, DEN-2639 pilot, DEN-2641 key lifecycle  
 **Implementation:** `ORESoftware/ores-sops`  
-**Portfolio project:** https://github.com/users/ORESoftware/projects/1
+**Portfolio project:** https://github.com/orgs/ORESoftware/projects/1
 
 ## Decision
 
