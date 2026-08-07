@@ -9,6 +9,20 @@ For conflicts, compare the merge base, both heads, relevant tests, and surroundi
 
 Validate the exact commit being proposed. Do not claim tests or deployments that were not actually run.
 
+## SOPS-managed dotenv repositories
+
+When a repository adopts the ORESoftware SOPS dotenv standard, agents must preserve the exact contract documented in [`docs/sops-environment-standard.md`](docs/sops-environment-standard.md):
+
+- plaintext dotenv files are ignored at every depth;
+- the only approved tracked secret-bearing paths are `env/enc/dev.env.enc` and `env/enc/prod.env.enc`;
+- decrypted files stay under ignored `env/dec/`;
+- root `.env` is absent or a managed relative symlink to `env/dec/dev.env` or `env/dec/prod.env`;
+- arbitrary environment names, unexpected `env/enc/*` files, and unmanaged root `.env` replacement are rejected;
+- SOPS operations on `.env.enc` files use explicit dotenv input/output types;
+- private identities and decrypted values never belong in prompts, Linear, GitHub text, logs, examples, fixtures, caches, or artifacts.
+
+Do not weaken these rules merely to make a test or deployment pass. Record an explicit exception and remediation plan instead.
+
 <!-- ore-org-baseline:begin -->
 Read and obey [`agents.md`](agents.md); the lowercase file is canonical.
 
