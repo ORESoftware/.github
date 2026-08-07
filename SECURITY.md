@@ -4,6 +4,21 @@ Report suspected vulnerabilities privately through GitHub's security-advisory fl
 
 Security fixes should include a clear threat model, affected boundary, regression test, rollout plan, and rollback path. Rotate any credential that may have been exposed; deleting it from a later commit is not sufficient.
 
+## Repository environment secrets
+
+Repositories that adopt SOPS-managed dotenv secrets must follow the organization standard in [`docs/sops-environment-standard.md`](docs/sops-environment-standard.md).
+
+The approved tracked secret-bearing paths are exactly:
+
+```text
+env/enc/dev.env.enc
+env/enc/prod.env.enc
+```
+
+Plaintext dotenv files remain ignored at every depth. The managed root `.env` is a relative symlink to an ignored `env/dec/dev.env` or `env/dec/prod.env`, never a copied plaintext file. CI and local hooks must reject force-added plaintext and unexpected files below `env/enc/`.
+
+Private SOPS/age identities and decrypted values must never be placed in Git, issues, pull requests, Linear, chat, logs, examples, screenshots, caches, or build artifacts.
+
 <!-- ore-org-baseline:begin -->
 ## Reporting a vulnerability
 
