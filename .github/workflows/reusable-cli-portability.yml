@@ -48,7 +48,7 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
-  CLI_CROSS_REPO_TOKEN: ${{ secrets.cross-repo-token }}
+  CLI_CROSS_REPO_TOKEN: ${{ secrets['cross-repo-token'] }}
 
 jobs:
   portability:
@@ -74,8 +74,8 @@ jobs:
         shell: node {0}
         env:
           CLI_LANGUAGE: ${{ inputs.language }}
-          CLI_WORKING_DIRECTORY: ${{ inputs.working-directory }}
-          CLI_NODE_PACKAGE_MANAGER: ${{ inputs.node-package-manager }}
+          CLI_WORKING_DIRECTORY: ${{ inputs['working-directory'] }}
+          CLI_NODE_PACKAGE_MANAGER: ${{ inputs['node-package-manager'] }}
         run: |
           const fs = require('fs');
           const path = require('path');
@@ -122,13 +122,13 @@ jobs:
         if: inputs.language == 'rust'
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
         with:
-          toolchain: ${{ inputs.rust-toolchain }}
+          toolchain: ${{ inputs['rust-toolchain'] }}
           components: rustfmt, clippy
 
       - name: Require a committed Cargo lockfile
-        if: inputs.language == 'rust' && inputs.cargo-locked
+        if: inputs.language == 'rust' && inputs['cargo-locked']
         shell: node {0}
-        working-directory: ${{ inputs.working-directory }}
+        working-directory: ${{ inputs['working-directory'] }}
         run: |
           const fs = require('fs');
           if (!fs.statSync('Cargo.lock', { throwIfNoEntry: false })?.isFile()) {
@@ -137,43 +137,43 @@ jobs:
 
       - name: Check Rust formatting
         if: inputs.language == 'rust'
-        working-directory: ${{ inputs.working-directory }}
+        working-directory: ${{ inputs['working-directory'] }}
         run: cargo fmt --all -- --check
 
       - name: Lint locked Rust targets
-        if: inputs.language == 'rust' && inputs.cargo-locked
-        working-directory: ${{ inputs.working-directory }}
+        if: inputs.language == 'rust' && inputs['cargo-locked']
+        working-directory: ${{ inputs['working-directory'] }}
         run: cargo clippy --locked --all-targets -- -D warnings
 
       - name: Lint Rust targets
-        if: inputs.language == 'rust' && !inputs.cargo-locked
-        working-directory: ${{ inputs.working-directory }}
+        if: inputs.language == 'rust' && !inputs['cargo-locked']
+        working-directory: ${{ inputs['working-directory'] }}
         run: cargo clippy --all-targets -- -D warnings
 
       - name: Test locked Rust targets
-        if: inputs.language == 'rust' && inputs.cargo-locked
-        working-directory: ${{ inputs.working-directory }}
+        if: inputs.language == 'rust' && inputs['cargo-locked']
+        working-directory: ${{ inputs['working-directory'] }}
         run: cargo test --locked --all-targets -- --nocapture
 
       - name: Test Rust targets
-        if: inputs.language == 'rust' && !inputs.cargo-locked
-        working-directory: ${{ inputs.working-directory }}
+        if: inputs.language == 'rust' && !inputs['cargo-locked']
+        working-directory: ${{ inputs['working-directory'] }}
         run: cargo test --all-targets -- --nocapture
 
       - name: Build locked release binaries
-        if: inputs.language == 'rust' && inputs.cargo-locked
-        working-directory: ${{ inputs.working-directory }}
+        if: inputs.language == 'rust' && inputs['cargo-locked']
+        working-directory: ${{ inputs['working-directory'] }}
         run: cargo build --locked --release --bins
 
       - name: Build release binaries
-        if: inputs.language == 'rust' && !inputs.cargo-locked
-        working-directory: ${{ inputs.working-directory }}
+        if: inputs.language == 'rust' && !inputs['cargo-locked']
+        working-directory: ${{ inputs['working-directory'] }}
         run: cargo build --release --bins
 
       - name: Smoke every Rust CLI binary
-        if: inputs.language == 'rust' && inputs.run-smoke
+        if: inputs.language == 'rust' && inputs['run-smoke']
         shell: node {0}
-        working-directory: ${{ inputs.working-directory }}
+        working-directory: ${{ inputs['working-directory'] }}
         run: |
           const childProcess = require('child_process');
           const fs = require('fs');
@@ -224,23 +224,23 @@ jobs:
         if: inputs.language == 'node'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: ${{ inputs.node-version }}
+          node-version: ${{ inputs['node-version'] }}
 
       - name: Install npm dependencies
-        if: inputs.language == 'node' && inputs.node-package-manager == 'npm'
-        working-directory: ${{ inputs.working-directory }}
+        if: inputs.language == 'node' && inputs['node-package-manager'] == 'npm'
+        working-directory: ${{ inputs['working-directory'] }}
         run: npm ci
 
       - name: Install pnpm dependencies
-        if: inputs.language == 'node' && inputs.node-package-manager == 'pnpm'
-        working-directory: ${{ inputs.working-directory }}
+        if: inputs.language == 'node' && inputs['node-package-manager'] == 'pnpm'
+        working-directory: ${{ inputs['working-directory'] }}
         run: |
           corepack enable
           pnpm install --frozen-lockfile
 
       - name: Install Yarn dependencies
-        if: inputs.language == 'node' && inputs.node-package-manager == 'yarn'
-        working-directory: ${{ inputs.working-directory }}
+        if: inputs.language == 'node' && inputs['node-package-manager'] == 'yarn'
+        working-directory: ${{ inputs['working-directory'] }}
         run: |
           corepack enable
           yarn install --immutable
@@ -248,9 +248,9 @@ jobs:
       - name: Run available Node CLI checks
         if: inputs.language == 'node'
         shell: node {0}
-        working-directory: ${{ inputs.working-directory }}
+        working-directory: ${{ inputs['working-directory'] }}
         env:
-          CLI_NODE_PACKAGE_MANAGER: ${{ inputs.node-package-manager }}
+          CLI_NODE_PACKAGE_MANAGER: ${{ inputs['node-package-manager'] }}
         run: |
           const childProcess = require('child_process');
           const fs = require('fs');
@@ -277,9 +277,9 @@ jobs:
           }
 
       - name: Smoke every Node CLI entry point
-        if: inputs.language == 'node' && inputs.run-smoke
+        if: inputs.language == 'node' && inputs['run-smoke']
         shell: node {0}
-        working-directory: ${{ inputs.working-directory }}
+        working-directory: ${{ inputs['working-directory'] }}
         run: |
           const childProcess = require('child_process');
           const fs = require('fs');
