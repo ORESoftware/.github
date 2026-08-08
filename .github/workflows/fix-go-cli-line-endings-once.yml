@@ -40,17 +40,17 @@ jobs:
 
           workflow = Path('.github/workflows/reusable-go-cli-portability.yml')
           source = workflow.read_text(encoding='utf-8')
-          anchor = '''      - name: Validate reusable workflow inputs
-          '''
-          replacement = '''      - name: Preserve repository line endings on every runner
-                  shell: pwsh
-                  run: |
-                    $ErrorActionPreference = 'Stop'
-                    git config --local core.autocrlf false
-                    git reset --hard HEAD
-
-                - name: Validate reusable workflow inputs
-          '''
+          anchor = "      - name: Validate reusable workflow inputs\n"
+          replacement = (
+              "      - name: Preserve repository line endings on every runner\n"
+              "        shell: pwsh\n"
+              "        run: |\n"
+              "          $ErrorActionPreference = 'Stop'\n"
+              "          git config --local core.autocrlf false\n"
+              "          git reset --hard HEAD\n"
+              "\n"
+              "      - name: Validate reusable workflow inputs\n"
+          )
           if source.count(anchor) != 1:
               raise SystemExit('Go reusable workflow validation boundary drifted')
           workflow.write_text(source.replace(anchor, replacement, 1), encoding='utf-8')
