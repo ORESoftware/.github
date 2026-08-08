@@ -222,9 +222,10 @@ jobs:
 
       - name: Install Node.js
         if: inputs.language == 'node'
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: ${{ inputs['node-version'] }}
+          package-manager-cache: false
 
       - name: Install npm dependencies
         if: inputs.language == 'node' && inputs['node-package-manager'] == 'npm'
@@ -263,12 +264,12 @@ jobs:
             throw new Error('Node CLI must expose at least a test or build script');
           }
           const packageManager = process.env.CLI_NODE_PACKAGE_MANAGER;
-          const executable = process.platform === 'win32' ? `${packageManager}.cmd` : packageManager;
           for (const script of selected) {
-            const result = childProcess.spawnSync(executable, ['run', script], {
+            const result = childProcess.spawnSync(packageManager, ['run', script], {
               stdio: 'inherit',
               timeout: 20 * 60_000,
               windowsHide: true,
+              shell: process.platform === 'win32',
             });
             if (result.error) throw result.error;
             if (result.status !== 0) {
