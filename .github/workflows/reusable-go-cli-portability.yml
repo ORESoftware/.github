@@ -51,6 +51,13 @@ jobs:
           persist-credentials: false
           show-progress: false
 
+      - name: Preserve repository line endings on every runner
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config --local core.autocrlf false
+          git reset --hard HEAD
+
       - name: Validate reusable workflow inputs
         shell: node {0}
         env:
