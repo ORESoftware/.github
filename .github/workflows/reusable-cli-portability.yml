@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       language:
-        description: CLI implementation language: rust or node
+        description: 'CLI implementation language: rust or node'
         required: true
         type: string
       working-directory:
