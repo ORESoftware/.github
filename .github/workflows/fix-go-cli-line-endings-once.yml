@@ -1,0 +1,78 @@
+name: Fix Go CLI checkout line endings once
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/fix-go-cli-line-endings-once.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-go-cli-line-endings-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: >-
+      github.actor != 'github-actions[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'agent/go-cli-portability-reusable-workflow'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out the exact feature branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: agent/go-cli-portability-reusable-workflow
+          fetch-depth: 1
+          persist-credentials: true
+          show-progress: false
+
+      - name: Insert the cross-platform checkout normalization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          workflow = Path('.github/workflows/reusable-go-cli-portability.yml')
+          source = workflow.read_text(encoding='utf-8')
+          anchor = '''      - name: Validate reusable workflow inputs
+          '''
+          replacement = '''      - name: Preserve repository line endings on every runner
+                  shell: pwsh
+                  run: |
+                    $ErrorActionPreference = 'Stop'
+                    git config --local core.autocrlf false
+                    git reset --hard HEAD
+
+                - name: Validate reusable workflow inputs
+          '''
+          if source.count(anchor) != 1:
+              raise SystemExit('Go reusable workflow validation boundary drifted')
+          workflow.write_text(source.replace(anchor, replacement, 1), encoding='utf-8')
+          Path('.github/workflows/fix-go-cli-line-endings-once.yml').unlink()
+          PY
+          git diff --check
+
+      - name: Commit only the durable workflow repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e .github/workflows/fix-go-cli-line-endings-once.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- \
+            .github/workflows/reusable-go-cli-portability.yml \
+            .github/workflows/fix-go-cli-line-endings-once.yml
+          expected=$'.github/workflows/fix-go-cli-line-endings-once.yml\n.github/workflows/reusable-go-cli-portability.yml'
+          actual="$(git diff --cached --name-only | sort)"
+          if [[ "$actual" != "$expected" ]]; then
+            printf 'unexpected staged paths:\n%s\n' "$actual" >&2
+            exit 1
+          fi
+          git commit -m 'fix: preserve Go source line endings on Windows'
+          git push origin HEAD:agent/go-cli-portability-reusable-workflow
