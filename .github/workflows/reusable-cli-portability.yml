@@ -1,0 +1,321 @@
+name: reusable CLI portability
+
+on:
+  workflow_call:
+    inputs:
+      language:
+        description: CLI implementation language: rust or node
+        required: true
+        type: string
+      working-directory:
+        description: Repository-relative directory containing Cargo.toml or package.json
+        required: false
+        default: .
+        type: string
+      rust-toolchain:
+        description: Rust toolchain selected by rustup
+        required: false
+        default: stable
+        type: string
+      node-version:
+        description: Node.js major or exact version
+        required: false
+        default: '22'
+        type: string
+      node-package-manager:
+        description: npm, pnpm, or yarn
+        required: false
+        default: npm
+        type: string
+      cargo-locked:
+        description: Require Cargo.lock for every Rust command
+        required: false
+        default: true
+        type: boolean
+      run-smoke:
+        description: Execute every built CLI binary with --help
+        required: false
+        default: true
+        type: boolean
+    secrets:
+      cross-repo-token:
+        description: Optional read-only token for private Git dependencies
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
+  CLI_CROSS_REPO_TOKEN: ${{ secrets.cross-repo-token }}
+
+jobs:
+  portability:
+    name: ${{ inputs.language }} CLI on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04
+          - macos-15
+          - windows-2025
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Check out the exact caller revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          show-progress: false
+
+      - name: Validate reusable workflow inputs
+        shell: node {0}
+        env:
+          CLI_LANGUAGE: ${{ inputs.language }}
+          CLI_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+          CLI_NODE_PACKAGE_MANAGER: ${{ inputs.node-package-manager }}
+        run: |
+          const fs = require('fs');
+          const path = require('path');
+
+          const language = process.env.CLI_LANGUAGE;
+          const workingDirectory = process.env.CLI_WORKING_DIRECTORY;
+          const packageManager = process.env.CLI_NODE_PACKAGE_MANAGER;
+          if (!['rust', 'node'].includes(language)) {
+            throw new Error(`language must be rust or node, received ${JSON.stringify(language)}`);
+          }
+          if (!workingDirectory || path.isAbsolute(workingDirectory)) {
+            throw new Error('working-directory must be a non-empty repository-relative path');
+          }
+          const normalized = path.normalize(workingDirectory);
+          if (normalized.split(path.sep).includes('..')) {
+            throw new Error('working-directory must remain inside the caller repository');
+          }
+          if (!fs.statSync(normalized, { throwIfNoEntry: false })?.isDirectory()) {
+            throw new Error(`working-directory is not a directory: ${normalized}`);
+          }
+          const manifest = language === 'rust' ? 'Cargo.toml' : 'package.json';
+          if (!fs.statSync(path.join(normalized, manifest), { throwIfNoEntry: false })?.isFile()) {
+            throw new Error(`${manifest} is required in ${normalized}`);
+          }
+          if (language === 'node' && !['npm', 'pnpm', 'yarn'].includes(packageManager)) {
+            throw new Error(`node-package-manager must be npm, pnpm, or yarn; received ${JSON.stringify(packageManager)}`);
+          }
+
+      - name: Configure optional private Git read access
+        if: env.CLI_CROSS_REPO_TOKEN != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config --global "url.https://x-access-token:$env:CLI_CROSS_REPO_TOKEN@github.com/.insteadOf" 'https://github.com/'
+
+      - name: Install Rust toolchain
+        if: inputs.language == 'rust'
+        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
+          components: rustfmt, clippy
+
+      - name: Require a committed Cargo lockfile
+        if: inputs.language == 'rust' && inputs.cargo-locked
+        shell: node {0}
+        run: |
+          const fs = require('fs');
+          if (!fs.statSync('Cargo.lock', { throwIfNoEntry: false })?.isFile()) {
+            throw new Error('cargo-locked=true requires a committed Cargo.lock');
+          }
+
+      - name: Check Rust formatting
+        if: inputs.language == 'rust'
+        run: cargo fmt --all -- --check
+
+      - name: Lint locked Rust targets
+        if: inputs.language == 'rust' && inputs.cargo-locked
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      - name: Lint Rust targets
+        if: inputs.language == 'rust' && !inputs.cargo-locked
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test locked Rust targets
+        if: inputs.language == 'rust' && inputs.cargo-locked
+        run: cargo test --locked --all-targets -- --nocapture
+
+      - name: Test Rust targets
+        if: inputs.language == 'rust' && !inputs.cargo-locked
+        run: cargo test --all-targets -- --nocapture
+
+      - name: Build locked release binaries
+        if: inputs.language == 'rust' && inputs.cargo-locked
+        run: cargo build --locked --release --bins
+
+      - name: Build release binaries
+        if: inputs.language == 'rust' && !inputs.cargo-locked
+        run: cargo build --release --bins
+
+      - name: Smoke every Rust CLI binary
+        if: inputs.language == 'rust' && inputs.run-smoke
+        shell: node {0}
+        run: |
+          const childProcess = require('child_process');
+          const fs = require('fs');
+          const path = require('path');
+
+          const metadataResult = childProcess.spawnSync(
+            'cargo',
+            ['metadata', '--no-deps', '--format-version', '1'],
+            { encoding: 'utf8', windowsHide: true },
+          );
+          if (metadataResult.status !== 0) {
+            process.stderr.write(metadataResult.stderr || 'cargo metadata failed\n');
+            process.exit(metadataResult.status ?? 1);
+          }
+          const metadata = JSON.parse(metadataResult.stdout);
+          const binaries = metadata.packages.flatMap((pkg) =>
+            pkg.targets
+              .filter((target) => target.kind.includes('bin'))
+              .map((target) => target.name),
+          );
+          if (binaries.length === 0) {
+            throw new Error('Rust CLI workflow requires at least one binary target');
+          }
+          for (const binary of [...new Set(binaries)].sort()) {
+            const executable = path.join(
+              metadata.target_directory,
+              'release',
+              binary + (process.platform === 'win32' ? '.exe' : ''),
+            );
+            if (!fs.statSync(executable, { throwIfNoEntry: false })?.isFile()) {
+              throw new Error(`release binary is missing: ${executable}`);
+            }
+            const result = childProcess.spawnSync(executable, ['--help'], {
+              encoding: 'utf8',
+              env: { ...process.env, NO_COLOR: '1' },
+              timeout: 30_000,
+              windowsHide: true,
+            });
+            process.stdout.write(result.stdout || '');
+            process.stderr.write(result.stderr || '');
+            if (result.error) throw result.error;
+            if (result.status !== 0) {
+              throw new Error(`${binary} --help exited ${result.status}`);
+            }
+          }
+
+      - name: Install Node.js
+        if: inputs.language == 'node'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install npm dependencies
+        if: inputs.language == 'node' && inputs.node-package-manager == 'npm'
+        run: npm ci
+
+      - name: Install pnpm dependencies
+        if: inputs.language == 'node' && inputs.node-package-manager == 'pnpm'
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: Install Yarn dependencies
+        if: inputs.language == 'node' && inputs.node-package-manager == 'yarn'
+        run: |
+          corepack enable
+          yarn install --immutable
+
+      - name: Run available Node CLI checks
+        if: inputs.language == 'node'
+        shell: node {0}
+        env:
+          CLI_NODE_PACKAGE_MANAGER: ${{ inputs.node-package-manager }}
+        run: |
+          const childProcess = require('child_process');
+          const fs = require('fs');
+
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const scripts = pkg.scripts || {};
+          const ordered = ['format:check', 'lint', 'typecheck', 'test', 'build'];
+          const selected = ordered.filter((name) => typeof scripts[name] === 'string');
+          if (!selected.includes('test') && !selected.includes('build')) {
+            throw new Error('Node CLI must expose at least a test or build script');
+          }
+          const packageManager = process.env.CLI_NODE_PACKAGE_MANAGER;
+          const executable = process.platform === 'win32' ? `${packageManager}.cmd` : packageManager;
+          for (const script of selected) {
+            const result = childProcess.spawnSync(executable, ['run', script], {
+              stdio: 'inherit',
+              timeout: 20 * 60_000,
+              windowsHide: true,
+            });
+            if (result.error) throw result.error;
+            if (result.status !== 0) {
+              throw new Error(`${packageManager} run ${script} exited ${result.status}`);
+            }
+          }
+
+      - name: Smoke every Node CLI entry point
+        if: inputs.language == 'node' && inputs.run-smoke
+        shell: node {0}
+        run: |
+          const childProcess = require('child_process');
+          const fs = require('fs');
+          const path = require('path');
+
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const entries = typeof pkg.bin === 'string'
+            ? [pkg.bin]
+            : Object.values(pkg.bin || {});
+          if (entries.length === 0) {
+            throw new Error('Node CLI workflow requires package.json#bin');
+          }
+          for (const entry of [...new Set(entries)].sort()) {
+            const resolved = path.resolve(entry);
+            if (!fs.statSync(resolved, { throwIfNoEntry: false })?.isFile()) {
+              throw new Error(`Node CLI entry point is missing after build: ${entry}`);
+            }
+            const result = childProcess.spawnSync(process.execPath, [resolved, '--help'], {
+              encoding: 'utf8',
+              env: { ...process.env, NO_COLOR: '1' },
+              timeout: 30_000,
+              windowsHide: true,
+            });
+            process.stdout.write(result.stdout || '');
+            process.stderr.write(result.stderr || '');
+            if (result.error) throw result.error;
+            if (result.status !== 0) {
+              throw new Error(`${entry} --help exited ${result.status}`);
+            }
+          }
+
+      - name: Prove tests did not mutate tracked source
+        if: always()
+        shell: node {0}
+        run: |
+          const childProcess = require('child_process');
+          const status = childProcess.spawnSync(
+            'git',
+            ['status', '--porcelain=v1', '--untracked-files=all'],
+            { encoding: 'utf8', windowsHide: true },
+          );
+          if (status.status !== 0) {
+            process.stderr.write(status.stderr || 'git status failed\n');
+            process.exit(status.status ?? 1);
+          }
+          if (status.stdout.trim()) {
+            process.stderr.write('CLI validation mutated the source checkout:\n');
+            process.stderr.write(status.stdout);
+            process.exit(1);
+          }
+
+      - name: Remove optional Git credential rewrite
+        if: always() && env.CLI_CROSS_REPO_TOKEN != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config --global --unset-all "url.https://x-access-token:$env:CLI_CROSS_REPO_TOKEN@github.com/.insteadOf" 'https://github.com/'
