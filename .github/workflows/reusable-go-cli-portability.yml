@@ -1,0 +1,254 @@
+name: reusable Go CLI portability
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: Repository-relative directory containing go.mod
+        required: false
+        default: .
+        type: string
+      main-package:
+        description: Go main package to build, relative to working-directory
+        required: false
+        default: .
+        type: string
+      run-smoke:
+        description: Execute the built CLI with --help
+        required: false
+        default: true
+        type: boolean
+    secrets:
+      cross-repo-token:
+        description: Optional read-only token for private Git module dependencies
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  GOFLAGS: -mod=readonly
+  GOTOOLCHAIN: local
+  CLI_CROSS_REPO_TOKEN: ${{ secrets['cross-repo-token'] }}
+
+jobs:
+  portability:
+    name: Go CLI on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04
+          - macos-15
+          - windows-2025
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - name: Check out the exact caller revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          show-progress: false
+
+      - name: Preserve repository line endings on every runner
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config --local core.autocrlf false
+          git reset --hard HEAD
+
+      - name: Validate reusable workflow inputs
+        shell: node {0}
+        env:
+          CLI_WORKING_DIRECTORY: ${{ inputs['working-directory'] }}
+          CLI_MAIN_PACKAGE: ${{ inputs['main-package'] }}
+        run: |
+          const fs = require('fs');
+          const path = require('path');
+
+          const workingDirectory = process.env.CLI_WORKING_DIRECTORY;
+          const mainPackage = process.env.CLI_MAIN_PACKAGE;
+          if (!workingDirectory || path.isAbsolute(workingDirectory)) {
+            throw new Error('working-directory must be a non-empty repository-relative path');
+          }
+          const normalized = path.normalize(workingDirectory);
+          if (normalized.split(path.sep).includes('..')) {
+            throw new Error('working-directory must remain inside the caller repository');
+          }
+          const candidate = fs.realpathSync(normalized);
+          const workspace = fs.realpathSync(process.env.GITHUB_WORKSPACE);
+          const relative = path.relative(workspace, candidate);
+          if (relative.startsWith('..') || path.isAbsolute(relative)) {
+            throw new Error('working-directory resolved outside the caller repository');
+          }
+          if (!fs.statSync(candidate).isDirectory()) {
+            throw new Error(`working-directory is not a directory: ${normalized}`);
+          }
+          if (!fs.statSync(path.join(candidate, 'go.mod'), { throwIfNoEntry: false })?.isFile()) {
+            throw new Error(`go.mod is required in ${normalized}`);
+          }
+          if (!mainPackage || /[\r\n\0]/u.test(mainPackage) || mainPackage.startsWith('-')) {
+            throw new Error('main-package must be a non-empty package selector, not a flag');
+          }
+
+      - name: Configure optional private Git read access
+        if: env.CLI_CROSS_REPO_TOKEN != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $key = "url.https://x-access-token:$env:CLI_CROSS_REPO_TOKEN@github.com/.insteadOf"
+          git config --global $key 'https://github.com/'
+
+      - name: Install Go from the caller module
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: ${{ inputs['working-directory'] }}/go.mod
+          cache: false
+
+      - name: Download and verify the immutable module graph
+        working-directory: ${{ inputs['working-directory'] }}
+        run: |
+          go mod download
+          go mod verify
+
+      - name: Check formatting of every tracked Go source
+        shell: node {0}
+        working-directory: ${{ inputs['working-directory'] }}
+        run: |
+          const childProcess = require('child_process');
+
+          const tracked = childProcess.spawnSync(
+            'git',
+            ['ls-files', '-z', '--', '*.go'],
+            { encoding: 'buffer', windowsHide: true },
+          );
+          if (tracked.status !== 0) {
+            process.stderr.write(tracked.stderr?.toString() || 'git ls-files failed\n');
+            process.exit(tracked.status ?? 1);
+          }
+          const files = tracked.stdout
+            .toString('utf8')
+            .split('\0')
+            .filter(Boolean);
+          if (files.length === 0) {
+            throw new Error('Go CLI workflow requires at least one tracked .go file');
+          }
+          const unformatted = [];
+          for (let index = 0; index < files.length; index += 100) {
+            const result = childProcess.spawnSync('gofmt', ['-l', ...files.slice(index, index + 100)], {
+              encoding: 'utf8',
+              windowsHide: true,
+            });
+            if (result.error) throw result.error;
+            if (result.status !== 0) {
+              process.stderr.write(result.stderr || 'gofmt failed\n');
+              process.exit(result.status ?? 1);
+            }
+            unformatted.push(...result.stdout.split(/\r?\n/u).filter(Boolean));
+          }
+          if (unformatted.length > 0) {
+            throw new Error(`gofmt required for: ${unformatted.join(', ')}`);
+          }
+
+      - name: Vet every Go package
+        working-directory: ${{ inputs['working-directory'] }}
+        run: go vet ./...
+
+      - name: Test every Go package
+        working-directory: ${{ inputs['working-directory'] }}
+        run: go test ./...
+
+      - name: Build the real CLI entry point
+        id: build
+        shell: node {0}
+        working-directory: ${{ inputs['working-directory'] }}
+        env:
+          CLI_MAIN_PACKAGE: ${{ inputs['main-package'] }}
+        run: |
+          const childProcess = require('child_process');
+          const fs = require('fs');
+          const path = require('path');
+
+          const mainPackage = process.env.CLI_MAIN_PACKAGE;
+          const listed = childProcess.spawnSync(
+            'go',
+            ['list', '-f', '{{.Name}}', mainPackage],
+            { encoding: 'utf8', windowsHide: true },
+          );
+          if (listed.error) throw listed.error;
+          if (listed.status !== 0) {
+            process.stderr.write(listed.stderr || 'go list failed\n');
+            process.exit(listed.status ?? 1);
+          }
+          if (listed.stdout.trim() !== 'main') {
+            throw new Error(`${mainPackage} is not a Go main package`);
+          }
+
+          const executable = path.join(
+            process.env.RUNNER_TEMP,
+            process.platform === 'win32' ? 'cli-portability.exe' : 'cli-portability',
+          );
+          const built = childProcess.spawnSync(
+            'go',
+            ['build', '-trimpath', '-o', executable, mainPackage],
+            { encoding: 'utf8', windowsHide: true },
+          );
+          if (built.error) throw built.error;
+          if (built.status !== 0) {
+            process.stderr.write(built.stderr || 'go build failed\n');
+            process.exit(built.status ?? 1);
+          }
+          if (!fs.statSync(executable, { throwIfNoEntry: false })?.isFile()) {
+            throw new Error(`Go CLI executable is missing: ${executable}`);
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `executable=${executable}\n`);
+
+      - name: Smoke the real Go CLI binary
+        if: inputs['run-smoke']
+        shell: node {0}
+        env:
+          CLI_EXECUTABLE: ${{ steps.build.outputs.executable }}
+        run: |
+          const childProcess = require('child_process');
+
+          const result = childProcess.spawnSync(process.env.CLI_EXECUTABLE, ['--help'], {
+            encoding: 'utf8',
+            env: { ...process.env, NO_COLOR: '1' },
+            timeout: 30_000,
+            windowsHide: true,
+          });
+          process.stdout.write(result.stdout || '');
+          process.stderr.write(result.stderr || '');
+          if (result.error) throw result.error;
+          if (result.status !== 0) {
+            throw new Error(`Go CLI --help exited ${result.status}`);
+          }
+
+      - name: Prove validation did not mutate source
+        if: always()
+        shell: node {0}
+        run: |
+          const childProcess = require('child_process');
+          const status = childProcess.spawnSync(
+            'git',
+            ['status', '--porcelain=v1', '--untracked-files=all'],
+            { encoding: 'utf8', windowsHide: true },
+          );
+          if (status.status !== 0) {
+            process.stderr.write(status.stderr || 'git status failed\n');
+            process.exit(status.status ?? 1);
+          }
+          if (status.stdout.trim()) {
+            process.stderr.write('Go CLI validation mutated the source checkout:\n');
+            process.stderr.write(status.stdout);
+            process.exit(1);
+          }
+
+      - name: Remove optional Git credential rewrite
+        if: ${{ always() && env.CLI_CROSS_REPO_TOKEN != '' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $key = "url.https://x-access-token:$env:CLI_CROSS_REPO_TOKEN@github.com/.insteadOf"
+          git config --global --unset-all $key 'https://github.com/'
