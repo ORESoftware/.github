@@ -62,9 +62,6 @@ jobs:
           - windows-2025
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
-    defaults:
-      run:
-        working-directory: ${{ inputs.working-directory }}
     steps:
       - name: Check out the exact caller revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -96,11 +93,17 @@ jobs:
           if (normalized.split(path.sep).includes('..')) {
             throw new Error('working-directory must remain inside the caller repository');
           }
-          if (!fs.statSync(normalized, { throwIfNoEntry: false })?.isDirectory()) {
+          const candidate = fs.realpathSync(normalized);
+          const workspace = fs.realpathSync(process.env.GITHUB_WORKSPACE);
+          const relative = path.relative(workspace, candidate);
+          if (relative.startsWith('..') || path.isAbsolute(relative)) {
+            throw new Error('working-directory resolved outside the caller repository');
+          }
+          if (!fs.statSync(candidate).isDirectory()) {
             throw new Error(`working-directory is not a directory: ${normalized}`);
           }
           const manifest = language === 'rust' ? 'Cargo.toml' : 'package.json';
-          if (!fs.statSync(path.join(normalized, manifest), { throwIfNoEntry: false })?.isFile()) {
+          if (!fs.statSync(path.join(candidate, manifest), { throwIfNoEntry: false })?.isFile()) {
             throw new Error(`${manifest} is required in ${normalized}`);
           }
           if (language === 'node' && !['npm', 'pnpm', 'yarn'].includes(packageManager)) {
@@ -112,7 +115,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          git config --global "url.https://x-access-token:$env:CLI_CROSS_REPO_TOKEN@github.com/.insteadOf" 'https://github.com/'
+          $key = "url.https://x-access-token:$env:CLI_CROSS_REPO_TOKEN@github.com/.insteadOf"
+          git config --global $key 'https://github.com/'
 
       - name: Install Rust toolchain
         if: inputs.language == 'rust'
@@ -124,6 +128,7 @@ jobs:
       - name: Require a committed Cargo lockfile
         if: inputs.language == 'rust' && inputs.cargo-locked
         shell: node {0}
+        working-directory: ${{ inputs.working-directory }}
         run: |
           const fs = require('fs');
           if (!fs.statSync('Cargo.lock', { throwIfNoEntry: false })?.isFile()) {
@@ -132,35 +137,43 @@ jobs:
 
       - name: Check Rust formatting
         if: inputs.language == 'rust'
+        working-directory: ${{ inputs.working-directory }}
         run: cargo fmt --all -- --check
 
       - name: Lint locked Rust targets
         if: inputs.language == 'rust' && inputs.cargo-locked
+        working-directory: ${{ inputs.working-directory }}
         run: cargo clippy --locked --all-targets -- -D warnings
 
       - name: Lint Rust targets
         if: inputs.language == 'rust' && !inputs.cargo-locked
+        working-directory: ${{ inputs.working-directory }}
         run: cargo clippy --all-targets -- -D warnings
 
       - name: Test locked Rust targets
         if: inputs.language == 'rust' && inputs.cargo-locked
+        working-directory: ${{ inputs.working-directory }}
         run: cargo test --locked --all-targets -- --nocapture
 
       - name: Test Rust targets
         if: inputs.language == 'rust' && !inputs.cargo-locked
+        working-directory: ${{ inputs.working-directory }}
         run: cargo test --all-targets -- --nocapture
 
       - name: Build locked release binaries
         if: inputs.language == 'rust' && inputs.cargo-locked
+        working-directory: ${{ inputs.working-directory }}
         run: cargo build --locked --release --bins
 
       - name: Build release binaries
         if: inputs.language == 'rust' && !inputs.cargo-locked
+        working-directory: ${{ inputs.working-directory }}
         run: cargo build --release --bins
 
       - name: Smoke every Rust CLI binary
         if: inputs.language == 'rust' && inputs.run-smoke
         shell: node {0}
+        working-directory: ${{ inputs.working-directory }}
         run: |
           const childProcess = require('child_process');
           const fs = require('fs');
@@ -215,16 +228,19 @@ jobs:
 
       - name: Install npm dependencies
         if: inputs.language == 'node' && inputs.node-package-manager == 'npm'
+        working-directory: ${{ inputs.working-directory }}
         run: npm ci
 
       - name: Install pnpm dependencies
         if: inputs.language == 'node' && inputs.node-package-manager == 'pnpm'
+        working-directory: ${{ inputs.working-directory }}
         run: |
           corepack enable
           pnpm install --frozen-lockfile
 
       - name: Install Yarn dependencies
         if: inputs.language == 'node' && inputs.node-package-manager == 'yarn'
+        working-directory: ${{ inputs.working-directory }}
         run: |
           corepack enable
           yarn install --immutable
@@ -232,6 +248,7 @@ jobs:
       - name: Run available Node CLI checks
         if: inputs.language == 'node'
         shell: node {0}
+        working-directory: ${{ inputs.working-directory }}
         env:
           CLI_NODE_PACKAGE_MANAGER: ${{ inputs.node-package-manager }}
         run: |
@@ -262,6 +279,7 @@ jobs:
       - name: Smoke every Node CLI entry point
         if: inputs.language == 'node' && inputs.run-smoke
         shell: node {0}
+        working-directory: ${{ inputs.working-directory }}
         run: |
           const childProcess = require('child_process');
           const fs = require('fs');
@@ -314,8 +332,9 @@ jobs:
           }
 
       - name: Remove optional Git credential rewrite
-        if: always() && env.CLI_CROSS_REPO_TOKEN != ''
+        if: ${{ always() && env.CLI_CROSS_REPO_TOKEN != '' }}
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          git config --global --unset-all "url.https://x-access-token:$env:CLI_CROSS_REPO_TOKEN@github.com/.insteadOf" 'https://github.com/'
+          $key = "url.https://x-access-token:$env:CLI_CROSS_REPO_TOKEN@github.com/.insteadOf"
+          git config --global --unset-all $key 'https://github.com/'
