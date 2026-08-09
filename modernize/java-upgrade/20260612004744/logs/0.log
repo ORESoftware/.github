@@ -1,0 +1,50 @@
+2026-06-12T00:47:44.046Z [INFO] ----------------------invoke appmod-list-jdks----------------------
+2026-06-12T00:47:44.046Z [INFO] [Tool.invoke]({name: appmod-list-jdks, modelId: undefined, input: {
+  "additionalSearchPaths": [
+    "/Library/Java/JavaVirtualMachines",
+    "/usr/local",
+    "/usr/lib",
+    "/opt"
+  ],
+  "version": "21",
+  "projectPath": "/Users/alexandermills/codes/ores"
+}}).
+2026-06-12T00:47:44.046Z [INFO] [Tool.invoke] do invoke.
+2026-06-12T00:47:44.061Z [INFO] [Tool.invoke]({result: {
+  "message": "No JDK installations found."
+}}).
+2026-06-12T00:47:44.061Z [INFO] ----------------------invoked appmod-list-jdks----------------------
+2026-06-12T00:47:46.444Z [INFO] ----------------------invoke appmod-list-jdks----------------------
+2026-06-12T00:47:46.444Z [INFO] [Tool.invoke]({name: appmod-list-jdks, modelId: undefined, input: {
+  "additionalSearchPaths": [
+    "/Library/Java/JavaVirtualMachines",
+    "/usr/local",
+    "/usr/lib",
+    "/opt"
+  ],
+  "projectPath": "/Users/alexandermills/codes/ores"
+}}).
+2026-06-12T00:47:46.444Z [INFO] [Tool.invoke] do invoke.
+2026-06-12T00:47:46.457Z [INFO] [Tool.invoke]({result: {
+  "message": "We found following jdks in your system:\n\n1. Java 24.0.1\n   📁 Path: /Users/alexandermills/Library/Java/JavaVirtualMachines/openjdk-24.0.1/Contents/Home/bin\n   🏷️ Source: others\n\nTotal: 1 JDK installation(s) found"
+}}).
+2026-06-12T00:47:46.457Z [INFO] ----------------------invoked appmod-list-jdks----------------------
+2026-06-12T00:47:49.864Z [INFO] ---------------------prepare appmod-list-mavens----------------------
+2026-06-12T00:47:49.864Z [INFO] [Tool.prepareInvocation]({name: appmod-list-mavens, input: {
+  "includeVersion": true
+}}).
+2026-06-12T00:47:49.864Z [INFO] [Tool.prepareInvocation] do prepare invocation.
+2026-06-12T00:47:49.864Z [INFO] [Tool.prepareInvocation]({result: {
+  "invocationMessage": "List mavens"
+}}).
+2026-06-12T00:47:49.864Z [INFO] ----------------------prepared appmod-list-mavens----------------------
+2026-06-12T00:47:49.865Z [INFO] ----------------------invoke appmod-list-mavens----------------------
+2026-06-12T00:47:49.866Z [INFO] [Tool.invoke]({name: appmod-list-mavens, modelId: undefined, input: {
+  "includeVersion": true,
+  "projectPath": "/Users/alexandermills/codes/ores"
+}}).
+2026-06-12T00:47:49.866Z [INFO] [Tool.invoke] do invoke.
+2026-06-12T00:47:49.867Z [INFO] [Tool.invoke]({result: {
+  "message": "No Maven installations found."
+}}).
+2026-06-12T00:47:49.867Z [INFO] ----------------------invoked appmod-list-mavens----------------------
