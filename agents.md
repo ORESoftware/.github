@@ -1,5 +1,19 @@
 # Account-level `.github` agent instructions
 
+## SOPS-managed dotenv repositories
+
+When a repository adopts the ORESoftware SOPS dotenv standard, preserve the exact contract documented in [`docs/sops-environment-standard.md`](docs/sops-environment-standard.md):
+
+- Plaintext dotenv files are ignored at every depth.
+- The only approved tracked secret-bearing paths are `env/enc/dev.env.enc` and `env/enc/prod.env.enc`.
+- Decrypted files stay under ignored `env/dec/`.
+- Root `.env` is absent or a managed relative symlink to `env/dec/dev.env` or `env/dec/prod.env`.
+- Arbitrary environment names, unexpected `env/enc/*` files, and unmanaged root `.env` replacement are rejected.
+- SOPS operations on `.env.enc` files use explicit dotenv input and output types.
+- Private identities and decrypted values never belong in prompts, Linear, GitHub text, logs, examples, fixtures, caches, or artifacts.
+
+Do not weaken these rules merely to make a test or deployment pass. Record an explicit exception and remediation plan instead.
+
 <!-- ore-org-baseline:begin -->
 These instructions apply to this repository. Repository-local instructions may add stricter requirements, but they must not weaken this baseline.
 
