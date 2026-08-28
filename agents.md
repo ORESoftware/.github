@@ -74,3 +74,12 @@ Use focused commits and draft pull requests. Link the relevant Linear project or
 
 Never report a branch, commit, pull request, merge, deployment, test run, or external update as completed without authoritative remote evidence. Local files and generated archives are not a substitute for a pushed repository and verifiable GitHub state.
 <!-- ore-org-baseline:end -->
+
+## Red PRs, stale PRs, and mandatory cherry-pick
+
+Superseded PRs often still contain ideas we want. Follow [`docs/stale-and-red-pull-requests.md`](docs/stale-and-red-pull-requests.md) on every org we own:
+
+- Diagnose red CI from the job log and try to get the PR green (merge main in; do not rebase).
+- If the PR is stale or outmoded, comment with salvage links and **cherry-pick** unique tests, contracts, hardening, and docs. Do not close it unless a human asked.
+- Do not rebase, stash, reset, or force-push unless a human named that exact operation.
+
