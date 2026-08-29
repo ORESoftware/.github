@@ -27,6 +27,7 @@ This is the fleet-wide contract for turning ChatGPT requests, Linear planning, G
 - Rebase or merge the latest base branch semantically. Preserve independent intent from both sides; never resolve conflicts by blindly selecting `ours` or `theirs`.
 - Run focused tests and required repository checks. A green focused test does not override a red required shared gate.
 - Merge only when the final head is reviewable, required checks pass or an explicit reviewed policy exemption applies, no unresolved review thread remains, and the merge is not superseded by a newer carrier.
+- **Red and stale PRs:** try to make red PRs green. When a PR is outmoded, comment and cherry-pick unique work; never discard the branch without salvage. See [`stale-and-red-pull-requests.md`](./stale-and-red-pull-requests.md). Do not rebase, stash, reset, or force-push unless a human named that exact operation.
 
 ## Status transitions
 
