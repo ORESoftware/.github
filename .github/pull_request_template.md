@@ -26,6 +26,8 @@ Describe the behavior and intent, not only the files changed.
 ## Planning and dependencies
 
 - Linear project or issue: [github.com/ORESoftware](https://linear.app/denman/project/githubcomoresoftware-1574ce77fadf)
+- GitHub Project: [ORESoftware Project #1](https://github.com/orgs/ORESoftware/projects/1)
+- Organization project registry/docs: [GitHub Project and Linear routing index](https://github.com/ORESoftware/.github/blob/main/docs/github-linear-project-registry.md)
 - Related GitHub issues or pull requests:
 - Related repositories or external contracts:
 
