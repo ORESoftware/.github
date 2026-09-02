@@ -1,39 +1,173 @@
 # ORESoftware SOPS environment-file standard
 
-**Status:** rollout standard / implementation merged / security-hardening audit in review  
-**Linear:** DEN-2636 parent, DEN-2637 implementation, DEN-2638 CI gates, DEN-2639 pilot, DEN-2641 key lifecycle  
+**Status:** v0.4 implementation merged and certified  
 **Implementation:** `ORESoftware/ores-sops`  
-**Portfolio project:** https://github.com/orgs/ORESoftware/projects/1
+**Implementation PR:** `ORESoftware/ores-sops#18`  
+**Completed issue:** `ORESoftware/ores-sops#16`  
+**Linear:** DEN-2636 parent, DEN-2637 implementation, DEN-2638 CI gates, DEN-2639 pilot, DEN-2641 key lifecycle  
 
 ## Decision
 
-Repositories adopting the ORESoftware SOPS dotenv convention track exactly these secret-bearing files:
+Repositories adopting the ORESoftware application-dotenv convention use exact,
+per-environment SOPS ciphertext files:
 
 ```text
 env/enc/dev.env.enc
+env/enc/stage.env.enc   # optional exact third environment
 env/enc/prod.env.enc
 ```
 
-Every plaintext dotenv file is local-only. The managed decrypted targets are:
+Development and production are required. Stage is optional, but when present it
+must use exactly `stage`; aliases such as `staging`, `qa`, `release`, wildcard
+rules, and arbitrary names are rejected.
+
+Every plaintext dotenv file is local-only. Managed decrypted targets are:
 
 ```text
 env/dec/dev.env
+env/dec/stage.env
 env/dec/prod.env
 ```
 
-The active local environment is exposed through a relative root symlink:
+The active local environment is a relative managed symlink:
 
 ```text
 .env -> env/dec/dev.env
 # or
+.env -> env/dec/stage.env
+# or
 .env -> env/dec/prod.env
 ```
 
-The helper must refuse to overwrite or remove a root `.env` that it does not own.
+The helper must never overwrite or remove an unmanaged root `.env` file or
+symlink. Existing valid v0.3 repositories with only dev/prod remain valid until
+they explicitly opt into stage.
+
+## Access-control model
+
+Access is granted per ciphertext file, not per repository.
+
+A developer may clone the repository and see ciphertext filenames, encrypted
+values, and public `age1...` recipient metadata. None of that grants decryption.
+The developer's matching private age identity can decrypt only files whose exact
+recipient list includes that public recipient.
+
+A normal age recipient list is one-of-many. Therefore:
+
+- an ordinary developer may be listed only on dev;
+- a release engineer may be listed on dev and stage but omitted from prod;
+- a production-authorized engineer may deliberately be listed on all three;
+- dev, stage, and prod CI/deploy workloads should use separate identities;
+- an independently controlled recovery identity may deliberately span all three.
+
+Recommended matrix:
+
+| Identity class | dev | stage | prod |
+| --- | ---: | ---: | ---: |
+| ordinary developer | yes | no | no |
+| release engineer | yes | yes | no |
+| production-authorized engineer | yes | yes | yes |
+| dev CI workload | yes | no | no |
+| stage deploy workload | no | yes | no |
+| prod deploy workload | no | no | yes |
+| offline recovery | yes | yes | yes |
+
+A stage-enabled production policy must retain at least one true dev-only
+recipient absent from both stage and prod. Repositories should also require at
+least one stage recipient omitted from prod. A production-only hardware or
+workload identity is recommended and can be enforced separately.
+
+Private identities, application values, and decrypted dotenv files must never
+appear in Git, Linear, issues, pull requests, chat, logs, screenshots, examples,
+fixtures, caches, or artifacts.
+
+## Canonical `.sops.yaml` pattern
+
+Only public recipients belong in `.sops.yaml`:
+
+```yaml
+creation_rules:
+  - path_regex: ^env/enc/dev\.env\.enc$
+    age:
+      - age1_DEV_DEVELOPER_REPLACE_WITH_REAL_PUBLIC_RECIPIENT
+      - age1_DEV_CI_REPLACE_WITH_REAL_PUBLIC_RECIPIENT
+      - age1_RECOVERY_REPLACE_WITH_REAL_PUBLIC_RECIPIENT
+
+  - path_regex: ^env/enc/stage\.env\.enc$
+    age:
+      - age1_RELEASE_ENGINEER_REPLACE_WITH_REAL_PUBLIC_RECIPIENT
+      - age1_STAGE_DEPLOY_REPLACE_WITH_REAL_PUBLIC_RECIPIENT
+      - age1_RECOVERY_REPLACE_WITH_REAL_PUBLIC_RECIPIENT
+
+  - path_regex: ^env/enc/prod\.env\.enc$
+    age:
+      - age1_PROD_OPERATOR_REPLACE_WITH_REAL_PUBLIC_RECIPIENT
+      - age1_PROD_DEPLOY_REPLACE_WITH_REAL_PUBLIC_RECIPIENT
+      - age1_RECOVERY_REPLACE_WITH_REAL_PUBLIC_RECIPIENT
+```
+
+A two-environment repository omits the exact stage rule and all stage material.
+Any `.sops.yaml` rule targeting `env/enc/` must be one of the exact dev, optional
+stage, or prod rules. Other SOPS artifact classes, such as narrowly scoped
+KSOPS-encrypted Kubernetes Secret YAML, must use a separate path and policy.
+
+## Desired policy versus current ciphertext access
+
+Each ciphertext has its own random SOPS data-encryption key. SOPS wraps that file
+key separately for the public recipients on the matching rule.
+
+`.sops.yaml` is desired policy. Existing ciphertext retains its current wrapped
+recipient metadata until that file is synchronized. Removing a public recipient
+from `.sops.yaml` alone does not revoke the identity from current ciphertext.
+
+After an access-policy change, update only the affected environment:
+
+```sh
+ores-sops sync-keys stage
+```
+
+Equivalent direct operation:
+
+```sh
+sops updatekeys -y --input-type dotenv env/enc/stage.env.enc
+```
+
+The access audit must compare desired recipients with actual public recipient
+metadata and fail on drift.
+
+## Initialization
+
+Recommended scoped stage-enabled initialization:
+
+```sh
+ores-sops init \
+  --with-stage \
+  --stage-recipient age1_STAGE_PUBLIC_RECIPIENT \
+  --prod-recipient age1_PROD_PUBLIC_RECIPIENT \
+  --recovery-recipient age1_RECOVERY_PUBLIC_RECIPIENT
+```
+
+When scoped recipient options are used, the local identity begins as dev-only.
+It is not added to stage or prod unless its public recipient is explicitly
+provided there.
+
+Supported options are repeatable:
+
+```text
+--recipient K           common/bootstrap recipient on every configured environment
+--dev-recipient K       dev only
+--stage-recipient K     stage only and enables stage
+--prod-recipient K      prod only
+--recovery-recipient K  every configured environment
+```
+
+Legacy `ores-sops init` remains a compatibility bootstrap. Its initial shared
+recipient set must not be mistaken for a final least-privilege production
+policy.
 
 ## Git ignore contract
 
-Use the explicit deny/allow rules below. The nested patterns intentionally encode the organization requirement even where Git pattern semantics overlap. The `*.env.*` rule also covers common plaintext variants such as `service.env.local` and `service.env.production`; the exact ciphertext paths are re-allowed afterward.
+A stage-enabled repository uses this deny/allow ordering:
 
 ```gitignore
 *.env
@@ -47,155 +181,211 @@ Use the explicit deny/allow rules below. The nested patterns intentionally encod
 
 /env/enc/*
 !/env/enc/dev.env.enc
+!/env/enc/stage.env.enc
 !/env/enc/prod.env.enc
 ```
 
-CI and local verification must prove this with `git check-ignore --no-index` and NUL-delimited `git ls-files -z` / staged-path enumeration, not merely by visually inspecting `.gitignore`.
+A legacy dev/prod repository may omit the stage ciphertext exception while stage
+is not configured. As soon as the exact stage rule exists, the stage exception
+is required.
 
-No other path below `env/enc/` is an approved tracked secret-bearing path.
+CI and local verification must prove ignore behavior with `git check-ignore
+--no-index` and NUL-delimited tracked/staged path enumeration, not visual
+inspection alone.
 
 ## SOPS format rules
 
-The `.env.enc` suffix means SOPS cannot infer the dotenv store from the final filename extension. Every SOPS operation must explicitly select dotenv input and output types.
-
-Encryption must also use the destination path as the SOPS filename override so exact creation rules are chosen deterministically:
+The `.env.enc` suffix does not let SOPS infer the dotenv store. Every operation
+must explicitly use:
 
 ```text
 --input-type dotenv
 --output-type dotenv
---filename-override env/enc/dev.env.enc
 ```
 
-Use separate exact creation rules for dev and prod. A bootstrap pilot may initially use one local public recipient, but production adoption must replace the production recipient set with a distinct protected identity or KMS policy.
+Encryption must also use the canonical destination as the filename override so
+the exact creation rule is selected deterministically:
 
-Any `.sops.yaml` rule that targets `env/enc/` must be one of the two exact dev/prod rules. Wildcard, staging, release, QA, catch-all, or other noncanonical `env/enc` rules are rejected. Other SOPS artifact classes, such as narrowly scoped KSOPS-encrypted Kubernetes Secret YAML, must use a separate path/policy and do not broaden this dotenv namespace.
+```text
+--filename-override env/enc/stage.env.enc
+```
 
 ## Filesystem and symlink boundary
 
-Repository-controlled paths are untrusted until validated. An adopting implementation must fail closed rather than follow repository symlinks for managed secret or policy paths.
+Repository-controlled paths are untrusted until validated. The implementation
+must fail closed rather than follow repository symlinks.
 
-- `env`, `env/enc`, and `env/dec` must be real directories, not symlinks.
-- `env/enc/dev.env.enc`, `env/enc/prod.env.enc`, managed decrypted files, and helper state files must not be symlinks when read or written.
-- `.sops.yaml`, `.gitignore`, `.gitattributes`, and `.env.example` must not be symlinks when the helper may write or validate them.
-- Approved ciphertext and policy paths must not be tracked as Git symlinks (`120000` mode).
-- `env/dec` should be mode `0700` on POSIX systems; decrypted dotenv files are `0600`.
-- Decrypted temporary files must live on the same filesystem as their final destination so atomic rename is available.
-- Temporary plaintext and diff baselines must be cleaned on normal exit and catchable termination signals. `SIGKILL` cannot be trapped, so `clean`/`lock` must also remove stale managed temp patterns from prior interrupted runs.
-
-The purpose of these rules is to prevent a malicious or accidentally malformed checkout from redirecting decrypt, encrypt, edit, lock, or scaffold operations to paths outside the repository.
+- `env`, `env/enc`, and `env/dec` must be real directories.
+- Canonical ciphertext, plaintext, and helper state files must not be symlinks.
+- `.sops.yaml`, `.gitignore`, `.gitattributes`, and `.env.example` must not be
+  symlinks when read, written, or validated.
+- Approved ciphertext and policy paths must not be tracked as Git mode `120000`.
+- `env/dec` is mode `0700`; completed plaintext files are mode `0600` on POSIX.
+- Temporary plaintext must be created beneath `env/dec` on the same filesystem
+  as its final target so atomic rename is available.
+- Catchable-signal and later `lock` cleanup must remove managed temp patterns.
+- Stage ciphertext, stage plaintext, or a stage `.env` target without the exact
+  stage rule must fail closed.
 
 ## Local activation rules
 
-1. Resolve only `dev` or `prod`; arbitrary environment names are rejected.
-2. Validate the managed directory tree and reject symlink escapes before reading or writing.
-3. Decrypt into an owner-only temporary file under `env/dec/`.
-4. Validate dotenv syntax and reject duplicate variable names before installation.
-5. Do not replace an existing complete plaintext file unless decryption and validation both succeed.
-6. Set the completed plaintext file to mode `0600` where the platform supports POSIX modes.
-7. Atomically rename the completed plaintext file into `env/dec/<env>.env`.
-8. Refuse to overwrite an unmanaged root `.env` file or symlink.
-9. Atomically replace the managed root symlink with a relative link to the selected target.
-10. Never infer production from branch names, missing development state, or current Git ref.
+1. Accept only `dev`, configured `stage`, or `prod`.
+2. Validate the managed tree before reading or writing.
+3. Decrypt into an owner-only temporary file beneath `env/dec`.
+4. Validate dotenv syntax and duplicate keys.
+5. Leave the prior complete plaintext untouched on decrypt or validation
+   failure.
+6. Atomically install the completed file with mode `0600`.
+7. Refuse an unmanaged root `.env`.
+8. Atomically replace only the managed relative `.env` symlink.
+9. Never infer production from a branch, missing lower environment, or Git ref.
+10. `lock` removes managed dev, stage, and prod plaintext and stale managed temp
+    state.
 
-`ORESoftware/ores-sops` is the reference helper for this contract.
+`ORESoftware/ores-sops` is the reference implementation.
 
-## Editing and non-secret output
+## Required access gate
 
-Prefer editing ciphertext through SOPS rather than routinely editing durable plaintext. When a plaintext edit workflow is used, the helper must detect local edits and refuse to silently clobber them.
+For stage-enabled repositories:
 
-Diff/status commands, CI output, logs, and automation evidence must never print decrypted values. A safe diff may report key names and whether a key was added, removed, or changed by hashing values internally without printing those values.
+```sh
+ores-sops verify
 
-Keyless ciphertext validation must reject an approved `.env.enc` file when a normal application assignment is visibly plaintext even if SOPS metadata is also present. Private-key scans must fail without echoing the matching secret line.
+ores-sops-access-audit check \
+  --require-stage \
+  --require-stage-exclusive \
+  --require-ciphertext
+```
+
+When a production-only identity is mandatory:
+
+```sh
+ores-sops-access-audit check \
+  --require-stage \
+  --require-stage-exclusive \
+  --require-prod-exclusive \
+  --require-ciphertext
+```
+
+Before ciphertext exists, only the explicit bootstrap mode may skip ciphertext
+synchronization:
+
+```sh
+ores-sops-access-audit check \
+  --require-stage \
+  --require-stage-exclusive \
+  --policy-only
+```
+
+Do not use `--policy-only` after ciphertext exists. The audit does not decrypt;
+it reads exact public rules and public SOPS recipient metadata. Normal output
+reports counts, not recipient strings.
+
+## Authorization acceptance tests
+
+Generated ephemeral identities must prove the negative matrix:
+
+```text
+dev identity:      dev succeeds; stage and prod fail
+stage identity:    stage succeeds; dev and prod fail
+prod identity:     prod succeeds; dev and stage fail
+recovery identity: dev, stage, and prod succeed
+```
+
+An unauthorized activation must create neither the requested plaintext file nor
+a managed `.env` link. A stage-only recipient change must not rewrite dev or
+prod ciphertext.
 
 ## Git hook boundary
 
-Git configuration is repository-controlled state and may redirect hook writes outside `.git`.
-
-- Use NUL-delimited staged-path enumeration so newline-containing filenames cannot bypass checks.
-- Include rename, copy, modification, type-change, and other non-deletion changes; a rename into `*.env` must be blocked.
-- Refuse a custom `core.hooksPath` by default. If a repository intentionally uses one, require an explicit reviewed opt-in rather than silently writing through it.
-- Reject symlinked hook directories and hook files before writing.
+- Enumerate staged paths NUL-safely, including rename/copy/type-change cases.
+- Reject plaintext at any depth, even when force-added.
+- Reject every `env/enc/*` path except canonical configured paths.
+- Reject stage ciphertext when the exact stage rule is absent.
+- Refuse custom `core.hooksPath` by default; require explicit reviewed opt-in.
+- Reject symlinked hook directories and hook files.
 - Preserve unmanaged hooks rather than overwriting them.
-- Shell-escape any absolute helper path embedded into generated hooks.
+- Shell-escape embedded helper paths.
 
 ## CI gates
 
-### Keyless pull-request checks
+Keyless pull-request CI must verify:
 
-Every adopting repository should be able to run these without a decryption identity:
-
-- root `.env`, nested `*.env`, common `*.env.*` variants, and `env/dec/**` are ignored;
-- `env/enc/dev.env.enc` and `env/enc/prod.env.enc` are not ignored;
-- no tracked plaintext dotenv path exists, including rename/newline-filename edge cases;
-- no unexpected tracked file exists under `env/enc/`;
-- approved ciphertext and policy files are not tracked symlinks;
-- `.sops.yaml` contains exact dev/prod path rules and no broad/noncanonical `env/enc` rule;
-- ciphertext files contain SOPS metadata and no obvious plaintext application assignment;
-- tracked private age/PEM/OpenSSH identity material is rejected without printing the match;
+- root, nested, suffixed, and `env/dec/**` plaintext is ignored;
+- exact dev/prod and configured stage ciphertext is trackable;
+- no unexpected tracked `env/enc/*` or plaintext path exists;
+- exact dev/prod and at most one exact stage rule exists;
+- stage material cannot exist without the stage rule;
+- desired and actual recipient sets agree for existing ciphertext;
+- the stage-enabled matrix includes a true dev-only recipient;
+- stage access remains narrower than prod when policy requires it;
+- ciphertext looks like SOPS output and contains no obvious plaintext
+  application assignment;
+- tracked private age/PEM/OpenSSH key material is rejected without echoing it;
 - `.gitattributes` normalizes `env/enc/*.env.enc` to LF;
-- helper tests cover unmanaged `.env` refusal, path allowlisting, atomic failure, symlink escapes, custom hook paths, hook symlinks, duplicate dotenv keys, temp cleanup, and NUL-safe Git filenames;
-- build/archive/container contexts cannot accidentally retain decrypted files.
+- Docker/build/archive contexts cannot retain plaintext, ciphertext, or private
+  identities;
+- helper, access-audit, fleet-audit, and wrapper tests pass.
 
-Fork-originated pull requests must not receive a decryption identity.
+Fork-originated pull requests must never receive decryption identities.
 
-### CI supply-chain requirements
+Trusted protected jobs may additionally verify decryptability and application
+startup without logging values. They must clean plaintext in an always-run
+finalizer and never cache or upload it.
 
-Security-sensitive workflows should minimize the CI execution surface:
-
-- pin third-party GitHub Actions to immutable full commit SHAs; comments may record the reviewed release tag;
-- use `contents: read` or narrower permissions where possible;
-- disable persisted checkout credentials when no push is required;
-- bound job runtime with timeouts;
-- use concurrency cancellation for superseded PR runs where appropriate;
-- do not pass production SOPS identities to ordinary pull-request workflows.
-
-### Trusted checks
-
-Protected branch/environment or manually approved trusted workflows may additionally:
-
-- verify SOPS MAC/decryptability;
-- validate dotenv syntax, duplicate keys, and repository-specific required-key schema;
-- smoke-test application startup without logging secrets;
-- clean temporary plaintext in an always-run finalizer.
-
-Never cache, upload, artifact, or summarize decrypted dotenv files.
+Security-sensitive workflows must pin third-party actions to immutable SHAs,
+use least privilege, disable persisted checkout credentials when unnecessary,
+bound runtime, and cancel superseded jobs where appropriate.
 
 ## Key lifecycle
 
-- Give humans individual identities; do not share one private human age identity.
-- Keep development and production recipient policies separate.
-- Prefer OIDC-backed KMS/workload identity for production CI when practical.
+- Give humans individual identities; never share one private human age key.
+- Keep dev, stage, and prod workload identities separate.
+- Prefer OIDC-backed KMS/workload identity for production automation.
 - Keep at least one independently controlled recovery path.
-- Run `sops updatekeys` after recipient changes.
-- Rotate the SOPS data key after removing access where future ciphertext access must be revoked.
-- Rotate application credentials whenever compromise, offboarding, or historical access requires it.
-- Remember that old Git commits remain decryptable to identities that had access to those historical ciphertext revisions.
+- Run `sync-keys`/`updatekeys` after every recipient change.
+- Rotate the SOPS data key after access removal when future ciphertext access
+  must be strongly revoked.
+- Rotate application credentials when an identity may have learned them.
+- Remember that old Git commits may remain decryptable to historically
+  authorized identities.
+- Remove GitHub, cloud, VPN, shell, CI, and secret-manager permissions
+  separately; SOPS controls ciphertext decryption only.
 
-Private identities and real secret values must never be stored in Git, Linear, GitHub issues or pull-request text, chat, logs, test fixtures, screenshots, build artifacts, or caches.
+## Runtime ACLs and shared machines
+
+SOPS controls whether an identity can decrypt. Once a file exists under
+`env/dec`, it is ordinary plaintext protected by the local operating system.
+Do not share one OS account between privileged and unprivileged developers.
+Production plaintext should normally materialize only on protected deployment
+workloads, not ordinary developer laptops. `sops-nix` owner/group/mode settings
+may add a host runtime ACL, but do not replace recipient policy.
 
 ## Rollout sequence
 
-1. Land and maintain the exact contract and adversarial tests in `ORESoftware/ores-sops`.
-2. Keep organization security/agent guidance in `ORESoftware/.github` synchronized with the implementation.
-3. Pilot with dummy values in one low-risk repository that already expects root `.env`.
-4. Certify Linux and macOS; explicitly certify Windows symlink behavior or document a repository/platform exception.
-5. Add protected development identities and exercise recipient add/remove workflows.
-6. Establish distinct production recipient/KMS policy and recovery drill.
-7. Roll out in small batches, prioritizing repositories already using reproducible Nix environments and flags-2-env conventions.
-8. Track every exception rather than weakening the baseline silently.
+1. Pin `ORESoftware/ores-sops` v0.4 or newer.
+2. Preserve valid dev/prod repositories unchanged until stage is needed.
+3. Opt into stage with the exact rule, Git allowlist, recipient matrix, helper,
+   access audit, and tests together.
+4. Use public dummy values for initial low-risk certification.
+5. Exercise onboarding, offboarding, negative decrypts, recovery, and key
+   synchronization.
+6. Protect `.sops.yaml`, stage/prod ciphertext, helper/audit code, and deployment
+   workflows with CODEOWNERS plus an enforced branch ruleset.
+7. Roll out in small auditable batches and track exceptions rather than
+   weakening the baseline.
 
 ## Acceptance criteria
 
-- Exactly `env/enc/dev.env.enc` and `env/enc/prod.env.enc` are approved tracked application-dotenv secret-bearing paths.
-- No plaintext `.env` or common `.env.*` variant is tracked at any depth except the explicitly safe `.env.example` schema file.
-- Managed env/policy paths cannot redirect helper reads/writes through symlinks.
-- Root `.env` is absent or a managed relative symlink to `env/dec/dev.env` or `env/dec/prod.env`.
-- Decrypt failure or malformed/duplicate dotenv content never replaces a prior complete plaintext file.
-- Unmanaged root `.env` state is never overwritten or deleted.
-- SOPS dotenv format selection is explicit and `env/enc` creation rules are exact.
-- Git checks are NUL-safe and include rename/type-change cases.
-- Custom/external hooks paths and symlinked hooks cannot receive helper writes without explicit reviewed opt-in.
-- Dev-only access cannot decrypt the final production policy.
-- Fork pull requests never receive decryption identities.
-- CI actions are immutably pinned and use least privilege.
-- CI, logs, artifacts, caches, Docker contexts, and release archives retain no decrypted dotenv material.
+- Dev and prod exact paths are required; stage is the only optional exact third
+  application-dotenv environment.
+- Dev-only access cannot decrypt stage or prod.
+- Stage-limited access cannot decrypt prod when that boundary is required.
+- Existing dev/prod repositories remain valid.
+- Stage material without the exact stage rule fails closed.
+- Plaintext is never tracked and managed local files remain owner-only.
+- Desired and actual public recipient metadata cannot silently drift.
+- Updating stage access does not alter dev or prod ciphertext.
+- Managed paths cannot redirect reads/writes through symlinks.
+- CI, logs, artifacts, caches, Docker contexts, and release archives retain no
+  decrypted dotenv material or private identity.
