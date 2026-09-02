@@ -6,18 +6,47 @@ Security fixes should include a clear threat model, affected boundary, regressio
 
 ## Repository environment secrets
 
-Repositories that adopt SOPS-managed dotenv secrets must follow the organization standard in [`docs/sops-environment-standard.md`](docs/sops-environment-standard.md).
+Repositories that adopt SOPS-managed application dotenv secrets must follow the
+organization standard in
+[`docs/sops-environment-standard.md`](docs/sops-environment-standard.md).
 
-The approved tracked secret-bearing paths are exactly:
+The approved tracked paths are exactly:
 
 ```text
 env/enc/dev.env.enc
+env/enc/stage.env.enc   # optional exact third environment
 env/enc/prod.env.enc
 ```
 
-Plaintext dotenv files remain ignored at every depth. The managed root `.env` is a relative symlink to an ignored `env/dec/dev.env` or `env/dec/prod.env`, never a copied plaintext file. CI and local hooks must reject force-added plaintext and unexpected files below `env/enc/`.
+Dev and prod are required. Stage is optional. `staging`, `qa`, wildcard rules,
+arbitrary names, and all other `env/enc/*` paths are rejected.
 
-Private SOPS/age identities and decrypted values must never be placed in Git, issues, pull requests, Linear, chat, logs, examples, screenshots, caches, or build artifacts.
+Plaintext stays only under ignored `env/dec/{dev,stage,prod}.env`. The managed
+root `.env` is a relative symlink to one configured ignored target, never a
+copied plaintext file. CI and local hooks must reject force-added plaintext,
+unexpected ciphertext paths, symlink redirection, and stage material without the
+exact stage rule.
+
+Repository read access is not decryption authorization. Every ciphertext has an
+independent recipient list. An ordinary developer may receive dev-only access
+and must fail to decrypt stage or prod. Stage-limited identities must be omitted
+from prod where that boundary is required. Protected production workloads and
+an independently controlled recovery identity should use separate credentials.
+
+Changing `.sops.yaml` does not by itself change existing ciphertext access. Run
+`ores-sops sync-keys <environment>` or `sops updatekeys` for each affected file,
+then require the desired-versus-actual recipient metadata audit. Do not use
+`--policy-only` to bypass checks after ciphertext exists.
+
+Private SOPS/age identities and decrypted values must never be placed in Git,
+issues, pull requests, Linear, chat, logs, examples, screenshots, caches, or
+build artifacts. Do not expose any decryption identity to fork-originated pull
+requests.
+
+Once decrypted material exists, it is ordinary plaintext subject to local OS
+permissions. Do not share one OS account between privileged and unprivileged
+developers. Production plaintext should normally materialize only on protected
+deployment workloads, not ordinary developer laptops.
 
 <!-- ore-org-baseline:begin -->
 ## Reporting a vulnerability
