@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "ores.deprecated-repositories.v1",
+  "owner": "ORESoftware",
+  "repositories": [
+    {
+      "repository": "ORESoftware/shared-auth-server.rs",
+      "status": "deprecated",
+      "canonicalRepository": "shared-auth/shared-auth-server.rs",
+      "canonicalUrl": "https://github.com/shared-auth/shared-auth-server.rs",
+      "releasesAllowed": false,
+      "allowedChangeClasses": [
+        "deprecation",
+        "migration",
+        "historical-reference"
+      ]
+    }
+  ]
+}
