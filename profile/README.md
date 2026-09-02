@@ -1,3 +1,12 @@
+<!-- ores-deprecated-repositories: 2026-09-01 -->
+> [!IMPORTANT]
+> **Deprecated ORESoftware repositories**
+>
+> - [`ORESoftware/ai-agent-bridge.rs`](https://github.com/ORESoftware/ai-agent-bridge.rs) is superseded by [`agent-pontifex`](https://github.com/agent-pontifex).
+> - [`ORESoftware/shared-auth-server.rs`](https://github.com/ORESoftware/shared-auth-server.rs) is superseded by [`shared-auth`](https://github.com/shared-auth).
+>
+> New feature development belongs in the replacement organizations. The legacy repositories are limited to security, migration, and narrowly scoped compatibility work.
+
 # ORESoftware
 
 This organization maintains software, infrastructure, interfaces, clients, services, and supporting documentation under a shared engineering baseline.

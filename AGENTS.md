@@ -1,3 +1,13 @@
+<!-- ores-deprecation-routing: 2026-09-01 -->
+# DEPRECATION ROUTING
+
+The following ORESoftware repositories are deprecated:
+
+- `ORESoftware/ai-agent-bridge.rs` → `https://github.com/agent-pontifex`
+- `ORESoftware/shared-auth-server.rs` → `https://github.com/shared-auth`
+
+Agents must route new feature work to the replacement organization. In a deprecated repository, work is restricted to security remediation, migration support, and narrowly scoped compatibility changes. Do not edit the replacement organization from a legacy-repository task unless that repository is separately named in the task.
+
 # Agent instructions
 
 Before editing:
