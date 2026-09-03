@@ -1,0 +1,112 @@
+name: Functional refactoring
+about: Plan a bounded functional-core / imperative-shell refactor with behavior and evidence gates
+title: "Functional refactor: "
+labels: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for behavior-preserving or explicitly specified refactors toward pure decision functions and narrow effect adapters. Read `docs/functional-refactoring-standard.md` and repository-local instructions first.
+
+  - type: input
+    id: tracking
+    attributes:
+      label: Linear and parent tracking
+      description: Exact Linear identifier/project and any parent GitHub issue. Do not paste credentials or private issue content.
+      placeholder: "DEN-1234; owner/repository#123"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Concrete problem
+      description: Name the nondeterminism, shared mutation, tangled effects, failure ambiguity, test gap, or other measured defect. “Make it functional” is not sufficient.
+    validations:
+      required: true
+
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Public behavior and contracts
+      description: Describe behavior that must remain stable, intentional changes, authoritative contracts, generated artifacts, and downstream consumers.
+    validations:
+      required: true
+
+  - type: textarea
+    id: seam
+    attributes:
+      label: Pure core and effect boundary
+      description: Identify the smallest pure decision/transition seam and every remaining effect adapter (network, DB, files, clock, randomness, logging, provider SDK, UI, process state).
+    validations:
+      required: true
+
+  - type: textarea
+    id: states
+    attributes:
+      label: State, result, error, and effect model
+      description: List closed variants, invalid transitions, discrepancy/stop behavior, cancellation, retry/idempotency, and partial-failure semantics.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: behavior_change
+    attributes:
+      label: Does this change externally observable behavior?
+      options:
+        - No; structural refactor only
+        - Yes; separately specified and migration-gated
+        - Unknown; stop for characterization first
+    validations:
+      required: true
+
+  - type: textarea
+    id: tests
+    attributes:
+      label: Characterization and differential tests
+      description: List existing/new fixtures, properties, fault injection, concurrency/cancellation cases, exact commands, and how old/new behavior will be compared.
+    validations:
+      required: true
+
+  - type: textarea
+    id: performance
+    attributes:
+      label: Performance and resource behavior
+      description: Provide benchmark plan/results or explain why the path is not performance-sensitive. Include allocation, ordering, queue, timeout, and concurrency implications.
+    validations:
+      required: true
+
+  - type: textarea
+    id: rollout
+    attributes:
+      label: Incremental rollout and rollback
+      description: Define the smallest PR slices, canary/call-site order, compatibility period, rollback trigger, and downstream consumer evidence.
+    validations:
+      required: true
+
+  - type: textarea
+    id: security
+    attributes:
+      label: Security, privacy, and secret handling
+      description: Explain changes to validation, authorization, context isolation, logs, fixtures, effect plans, personal data, and credentials.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: gates
+    attributes:
+      label: Admission checklist
+      options:
+        - label: I read repository-local instructions and identified the authoritative source rather than a generated mirror.
+          required: true
+        - label: Characterization tests exist or this issue explicitly stops until they are added.
+          required: true
+        - label: I will keep behavior changes separate from structural changes where practical.
+          required: true
+        - label: Unknown inputs/effects and independent-authority discrepancies fail closed.
+          required: true
+        - label: I will not use rebase, stash, reset, force-push, or destructive cleanup without exact human authorization.
+          required: true
+        - label: No credential, private key, session secret, personal data, or private provider payload is included here.
+          required: true
