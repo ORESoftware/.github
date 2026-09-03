@@ -12,7 +12,21 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "deprecated-repositories.json"
 REPOSITORY_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 URL_RE = re.compile(r"^https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)$")
-ALLOWED_CHANGE_CLASSES = {"deprecation", "migration", "historical-reference"}
+ALLOWED_CHANGE_CLASSES = {
+    "deprecation",
+    "security-remediation",
+    "migration",
+    "compatibility",
+    "historical-reference",
+}
+REQUIRED_ROUTES = {
+    "ORESoftware/ai-agent-bridge.rs": "agent-pontifex/ai-agent-bridge.rs",
+    "ORESoftware/shared-auth-server.rs": "shared-auth/shared-auth-server.rs",
+}
+ROUTING_SURFACES = {
+    ROOT / "AGENTS.md": "<!-- ores-deprecation-routing: 2026-09-03 -->",
+    ROOT / "profile/README.md": "<!-- ores-deprecated-repositories: 2026-09-03 -->",
+}
 
 
 def fail(message: str, failures: list[str]) -> None:
@@ -34,6 +48,7 @@ def main() -> int:
         rows = []
 
     seen: set[str] = set()
+    observed_routes: dict[str, str] = {}
     for index, row in enumerate(rows):
         prefix = f"repositories[{index}]"
         if not isinstance(row, dict):
@@ -59,6 +74,8 @@ def main() -> int:
             fail(f"{prefix}.canonicalRepository is invalid", failures)
         elif canonical == repository:
             fail(f"{prefix} canonical repository must differ", failures)
+        elif isinstance(repository, str):
+            observed_routes[repository] = canonical
         match = URL_RE.fullmatch(str(row.get("canonicalUrl", "")))
         if not match or match.group(1) != canonical:
             fail(f"{prefix}.canonicalUrl must exactly match canonicalRepository", failures)
@@ -67,13 +84,49 @@ def main() -> int:
         if row.get("releasesAllowed") is not False:
             fail(f"{prefix}.releasesAllowed must be false", failures)
         classes = row.get("allowedChangeClasses")
-        if not isinstance(classes, list) or set(classes) != ALLOWED_CHANGE_CLASSES or len(classes) != len(ALLOWED_CHANGE_CLASSES):
-            fail(f"{prefix}.allowedChangeClasses must contain the complete frozen set", failures)
+        if (
+            not isinstance(classes, list)
+            or set(classes) != ALLOWED_CHANGE_CLASSES
+            or len(classes) != len(ALLOWED_CHANGE_CLASSES)
+        ):
+            fail(
+                f"{prefix}.allowedChangeClasses must contain the complete frozen set",
+                failures,
+            )
 
-    documentation = (ROOT / "docs/deprecated-repositories.md").read_text(encoding="utf-8")
-    for repository in sorted(seen):
+    if observed_routes != REQUIRED_ROUTES:
+        fail("registry must contain exactly the reviewed canonical routes", failures)
+
+    documentation = (ROOT / "docs/deprecated-repositories.md").read_text(
+        encoding="utf-8"
+    )
+    for repository, canonical in sorted(REQUIRED_ROUTES.items()):
         if repository not in documentation:
             fail(f"documentation omits {repository}", failures)
+        if canonical not in documentation:
+            fail(f"documentation omits {canonical}", failures)
+
+    for path, marker in ROUTING_SURFACES.items():
+        text = path.read_text(encoding="utf-8")
+        if not text.startswith(marker):
+            fail(f"{path.relative_to(ROOT)} must begin with {marker}", failures)
+        header = text[:2500]
+        for repository, canonical in sorted(REQUIRED_ROUTES.items()):
+            if repository not in header:
+                fail(f"{path.relative_to(ROOT)} omits {repository} near the top", failures)
+            if canonical not in header:
+                fail(f"{path.relative_to(ROOT)} omits {canonical} near the top", failures)
+
+    migration = (
+        ROOT / "docs/migrations/ai-agent-bridge-to-agent-pontifex.md"
+    ).read_text(encoding="utf-8")
+    for value in (
+        "ORESoftware/ai-agent-bridge.rs",
+        "agent-pontifex/ai-agent-bridge.rs",
+        "Consumer migration gate",
+    ):
+        if value not in migration:
+            fail(f"AI-agent bridge migration evidence omits {value}", failures)
 
     if failures:
         for message in failures:

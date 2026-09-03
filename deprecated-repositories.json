@@ -3,6 +3,20 @@
   "owner": "ORESoftware",
   "repositories": [
     {
+      "repository": "ORESoftware/ai-agent-bridge.rs",
+      "status": "deprecated",
+      "canonicalRepository": "agent-pontifex/ai-agent-bridge.rs",
+      "canonicalUrl": "https://github.com/agent-pontifex/ai-agent-bridge.rs",
+      "releasesAllowed": false,
+      "allowedChangeClasses": [
+        "deprecation",
+        "security-remediation",
+        "migration",
+        "compatibility",
+        "historical-reference"
+      ]
+    },
+    {
       "repository": "ORESoftware/shared-auth-server.rs",
       "status": "deprecated",
       "canonicalRepository": "shared-auth/shared-auth-server.rs",
@@ -10,7 +24,9 @@
       "releasesAllowed": false,
       "allowedChangeClasses": [
         "deprecation",
+        "security-remediation",
         "migration",
+        "compatibility",
         "historical-reference"
       ]
     }
