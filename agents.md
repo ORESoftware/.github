@@ -68,6 +68,35 @@ Edit the authoritative source repository, not a generated mirror, vendored copy,
 
 Never commit, print, log, paste into prompts, or place in fixtures any token, password, private key, session secret, database URL, customer data, legal record, private health data, or unpublished security detail. Use documented secret stores and redacted examples. If a credential is exposed, stop using it, remove it from active artifacts where safely possible, revoke or rotate it, and document the incident through an approved private channel. History rewriting still requires exact authorization.
 
+## SOPS-managed application dotenv
+
+Repositories adopting the ORESoftware SOPS dotenv standard must follow
+[`docs/sops-environment-standard.md`](docs/sops-environment-standard.md).
+
+- Required exact ciphertext paths are `env/enc/dev.env.enc` and
+  `env/enc/prod.env.enc`.
+- `env/enc/stage.env.enc` is the only optional exact third environment.
+- Plaintext stays under ignored `env/dec/{dev,stage,prod}.env`; root `.env` may
+  only be a managed relative symlink to one configured target.
+- Reject `staging`, `qa`, wildcard rules, arbitrary names, and unexpected
+  `env/enc/*` files.
+- Repository read access exposes ciphertext, not plaintext. Decryption rights
+  come from the exact per-file age/KMS recipient set.
+- A stage-enabled matrix must retain at least one true dev-only recipient absent
+  from stage and prod. Enforce stage-not-prod and prod-only boundaries where the
+  repository policy requires them.
+- Never copy every recipient into every environment merely to make automation
+  pass.
+- A recipient change is incomplete until the affected ciphertext is synchronized
+  with `ores-sops sync-keys <environment>` or `sops updatekeys` and the
+  desired-versus-actual access audit passes.
+- `--policy-only` is bootstrap-only and must not be used to bypass existing
+  ciphertext checks.
+- Never expose decryption identities to fork-originated pull requests.
+- Once plaintext exists, local OS permissions apply; do not share one OS account
+  between privileged and unprivileged developers, and normally materialize
+  production plaintext only on protected deployment workloads.
+
 ## Pull requests, tests, and evidence
 
 Use focused commits and draft pull requests. Link the relevant Linear project or issue. Explain behavior, risks, migration and rollback considerations, security impact, tests run, and any cross-repository dependencies. Pin external GitHub Actions to full commit SHAs; declare least-privilege workflow permissions, explicit timeouts, concurrency cancellation where appropriate, and `persist-credentials: false` for checkout.
@@ -82,4 +111,3 @@ Superseded PRs often still contain ideas we want. Follow [`docs/stale-and-red-pu
 - Diagnose red CI from the job log and try to get the PR green (merge main in; do not rebase).
 - If the PR is stale or outmoded, comment with salvage links and **cherry-pick** unique tests, contracts, hardening, and docs. Do not close it unless a human asked.
 - Do not rebase, stash, reset, or force-push unless a human named that exact operation.
-

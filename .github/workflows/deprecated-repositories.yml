@@ -1,0 +1,35 @@
+name: deprecated repository registry
+
+on:
+  pull_request:
+    paths:
+      - deprecated-repositories.json
+      - docs/deprecated-repositories.md
+      - scripts/check-deprecated-repositories.py
+      - .github/workflows/deprecated-repositories.yml
+  push:
+    branches: [main]
+    paths:
+      - deprecated-repositories.json
+      - docs/deprecated-repositories.md
+      - scripts/check-deprecated-repositories.py
+      - .github/workflows/deprecated-repositories.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deprecated-repositories-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          show-progress: false
+      - name: Validate frozen repository registry
+        run: python3 scripts/check-deprecated-repositories.py

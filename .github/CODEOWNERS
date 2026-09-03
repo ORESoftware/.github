@@ -1,0 +1,5 @@
+# Organization-wide security and agent policy changes require owner review.
+/docs/sops-environment-standard.md @ORESoftware
+/SECURITY.md @ORESoftware
+/agents.md @ORESoftware
+/AGENTS.md @ORESoftware
