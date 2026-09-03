@@ -3,15 +3,21 @@ name: deprecated repository registry
 on:
   pull_request:
     paths:
+      - AGENTS.md
+      - profile/README.md
       - deprecated-repositories.json
       - docs/deprecated-repositories.md
+      - docs/migrations/ai-agent-bridge-to-agent-pontifex.md
       - scripts/check-deprecated-repositories.py
       - .github/workflows/deprecated-repositories.yml
   push:
     branches: [main]
     paths:
+      - AGENTS.md
+      - profile/README.md
       - deprecated-repositories.json
       - docs/deprecated-repositories.md
+      - docs/migrations/ai-agent-bridge-to-agent-pontifex.md
       - scripts/check-deprecated-repositories.py
       - .github/workflows/deprecated-repositories.yml
 
@@ -24,12 +30,14 @@ concurrency:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           show-progress: false
-      - name: Validate frozen repository registry
+      - name: Compile registry validator
+        run: python3 -m py_compile scripts/check-deprecated-repositories.py
+      - name: Validate frozen repository registry and routing surfaces
         run: python3 scripts/check-deprecated-repositories.py
