@@ -11,15 +11,21 @@ Validate the exact commit being proposed. Do not claim tests or deployments that
 
 ## SOPS-managed dotenv repositories
 
-When a repository adopts the ORESoftware SOPS dotenv standard, agents must preserve the exact contract documented in [`docs/sops-environment-standard.md`](docs/sops-environment-standard.md):
+When a repository adopts the ORESoftware SOPS dotenv standard, preserve the
+exact contract in [`docs/sops-environment-standard.md`](docs/sops-environment-standard.md):
 
-- plaintext dotenv files are ignored at every depth;
-- the only approved tracked secret-bearing paths are `env/enc/dev.env.enc` and `env/enc/prod.env.enc`;
-- decrypted files stay under ignored `env/dec/`;
-- root `.env` is absent or a managed relative symlink to `env/dec/dev.env` or `env/dec/prod.env`;
-- arbitrary environment names, unexpected `env/enc/*` files, and unmanaged root `.env` replacement are rejected;
-- SOPS operations on `.env.enc` files use explicit dotenv input/output types;
-- private identities and decrypted values never belong in prompts, Linear, GitHub text, logs, examples, fixtures, caches, or artifacts.
+- required ciphertext paths are `env/enc/dev.env.enc` and `env/enc/prod.env.enc`;
+- `env/enc/stage.env.enc` is the only optional exact third environment;
+- plaintext stays only under ignored `env/dec/{dev,stage,prod}.env`;
+- root `.env` is absent or a managed relative symlink to one configured target;
+- `staging`, `qa`, wildcard rules, arbitrary names, and unexpected `env/enc/*` files are rejected;
+- access is per ciphertext recipient list, not repository membership;
+- stage-enabled policies retain a true dev-only recipient omitted from stage and prod;
+- use `--require-stage-exclusive` when stage recipients must be omitted from prod and `--require-prod-exclusive` when a production-only identity is required;
+- `.sops.yaml` edits are incomplete until affected ciphertext metadata is synchronized with `ores-sops sync-keys <environment>` or `sops updatekeys`;
+- SOPS operations on `.env.enc` use explicit dotenv input/output types;
+- private identities and decrypted values never belong in prompts, Linear, GitHub text, logs, examples, fixtures, caches, or artifacts;
+- run `ores-sops verify` and the required ciphertext access audit; never use `--policy-only` after ciphertext exists.
 
 Do not weaken these rules merely to make a test or deployment pass. Record an explicit exception and remediation plan instead.
 
