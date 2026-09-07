@@ -1,0 +1,166 @@
+schemaVersion = "ores.repository-family-provisioning.v1"
+organization = "ores-legal"
+trackingIssue = "ORESoftware/.github#32"
+linearProject = "ores-legal"
+status = "blocked"
+reviewedAt = "2026-09-07T21:46:53Z"
+blocker = "Production organization is not exposed to the connected GitHub App and the connector has no repository-creation mutation. Use the guarded ores-cli bootstrap only after exact-head tests pass and an authenticated organization-admin path is available."
+
+[[repositories]]
+name = ".github"
+role = "canonical"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-interfaces"
+role = "interfaces"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-clients"
+role = "clients"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-sync"
+role = "sync"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-cli"
+role = "cli"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-monorepo"
+role = "monorepo"
+visibility = "private"
+required = true
+note = "Deployable repositories are immutable git submodules under apps/. Infrastructure is not an apps/ submodule."
+
+[[repositories]]
+name = "ores-legal-infra"
+role = "infrastructure"
+visibility = "private"
+required = true
+note = "Top-level supabase/ and neon/ directories are required."
+
+[[repositories]]
+name = "ores-legal-desktop-app.rs"
+role = "desktopRust"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-flutter"
+role = "flutter"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-lambdas"
+role = "lambdas"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-api-server.rs"
+role = "apiServer"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-admin-api-server.rs"
+role = "adminApiServer"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-web-server.rs"
+role = "webServer"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-admin-web-server.rs"
+role = "adminWebServer"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-docs"
+role = "documentation"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-mcp-server.rs"
+role = "mcpServer"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-lib-core"
+role = "libCore"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-orm-core"
+role = "ormCore"
+visibility = "private"
+required = true
+
+[[repositories]]
+name = "ores-legal-pub-lib-core"
+role = "pubLibCore"
+visibility = "private"
+required = true
+note = "Remain private until secret scanning, license review, public contract stability and generated-artifact gates pass."
+
+[[repositories]]
+name = "ores-legal.github.io"
+role = "marketing"
+visibility = "public"
+required = true
+note = "Astro organization site; create separately from the private family."
+
+[contracts]
+typespec = "independent-authority"
+jsonSchema = "independent-authority"
+parityValidator = "tjsv"
+generatedReadmeRequired = true
+maintainedLanguages = [
+  "rust",
+  "typescript",
+  "javascript",
+  "dart",
+  "go",
+  "gleam",
+  "java",
+  "kotlin",
+  "swift",
+  "csharp",
+  "python",
+  "ruby",
+  "php",
+  "cpp",
+  "elixir",
+  "wit",
+]
+
+[platform]
+authentication = ["shared-auth", "3FA-app"]
+middleware = ["ores-middleware", "ores-rate-limit"]
+runtimeConfiguration = ["ores-redis-lru-cache", "ores-sops"]
+observability = ["ores-otel"]
+synchronization = ["opto-sync"]
+dependencies = ["zed-pkg"]
+cliFlags = ["flags-2-env"]
+chat = ["ores-chat"]
+wasmPreparation = ["ores-wasm-loaders"]
