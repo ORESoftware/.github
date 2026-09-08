@@ -1,0 +1,26 @@
+name: scratch-ignore-composite
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scratch-ignore-composite-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out the exact test tree without persistent credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run the actual PR's composite action and bundled Rust checker
+        uses: ./.github/actions/scratch-ignore-policy
