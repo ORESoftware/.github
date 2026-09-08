@@ -1,0 +1,3 @@
+# Scratch directories at any depth; ordinary tmp/temp files remain visible.
+tmp/
+temp/
