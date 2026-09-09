@@ -1,6 +1,5 @@
 namespace Ores.R2Fleet;
 
-@id("AdmissionState")
 enum AdmissionState {
   planned: "planned",
   inProgress: "in_progress",
@@ -9,7 +8,6 @@ enum AdmissionState {
   notApplicable: "not_applicable",
 }
 
-@id("EvidenceState")
 enum EvidenceState {
   unknownState: "unknown",
   notExecuted: "not_executed",
@@ -19,7 +17,6 @@ enum EvidenceState {
   passed: "passed",
 }
 
-@id("TaskCategory")
 enum TaskCategory {
   inventoryState: "inventory_state",
   credentials: "credentials",
@@ -35,17 +32,14 @@ enum TaskCategory {
   recovery: "recovery",
 }
 
-@id("GeneratedEvidenceRole")
 enum GeneratedEvidenceRole {
   comparisonEvidenceOnly: "comparison_evidence_only",
 }
 
-@id("AuthorityPrecedence")
 enum AuthorityPrecedence {
   none: "none",
 }
 
-@id("R2AdmissionTask")
 model R2AdmissionTask {
   code: string;
   issue: string;
@@ -55,7 +49,6 @@ model R2AdmissionTask {
   dependsOn: string[];
 }
 
-@id("R2OrganizationAdmission")
 model R2OrganizationAdmission {
   organization: string;
   namespaceState: AdmissionState;
@@ -71,7 +64,6 @@ model R2OrganizationAdmission {
   documentAdmission: AdmissionState;
 }
 
-@id("R2FleetAdmissionProgram")
 model R2FleetAdmissionProgram {
   schemaVersion: "ores.r2-fleet-admission/v1";
   linearIssue: "DEN-3109";
