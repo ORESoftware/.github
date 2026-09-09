@@ -1,0 +1,302 @@
+{
+  "schemaVersion": "ores.r2-fleet-admission/v1",
+  "linearIssue": "DEN-3109",
+  "githubProgramIssue": "https://github.com/ORESoftware/.github/issues/39",
+  "programState": "in_progress",
+  "generatedEvidenceRole": "comparison_evidence_only",
+  "authorityPrecedence": "none",
+  "tasks": [
+    {
+      "code": "R2-01",
+      "issue": "https://github.com/ORESoftware/.github/issues/42",
+      "title": "Build authenticated bucket inventory and single-state-owner ledger",
+      "category": "inventory_state",
+      "state": "planned",
+      "dependsOn": []
+    },
+    {
+      "code": "R2-02",
+      "issue": "https://github.com/ORESoftware/.github/issues/45",
+      "title": "Enforce one bucket-scoped runtime identity and secret reference per bucket",
+      "category": "credentials",
+      "state": "planned",
+      "dependsOn": [
+        "R2-01"
+      ]
+    },
+    {
+      "code": "R2-08",
+      "issue": "https://github.com/ORESoftware/.github/issues/52",
+      "title": "Restore exact-head private-repository CI for R2, TJSV and OpenTofu gates",
+      "category": "ci",
+      "state": "in_progress",
+      "dependsOn": []
+    },
+    {
+      "code": "R2-09",
+      "issue": "https://github.com/ORESoftware/.github/issues/53",
+      "title": "Roll out TJSV peer-authority storage contracts and runtime conformance fleet-wide",
+      "category": "contracts",
+      "state": "in_progress",
+      "dependsOn": [
+        "R2-08"
+      ]
+    },
+    {
+      "code": "R2-10",
+      "issue": "https://github.com/ORESoftware/.github/issues/56",
+      "title": "Reconcile and migrate legacy bucket ownership without duplicate Terraform writers",
+      "category": "migration",
+      "state": "in_progress",
+      "dependsOn": [
+        "R2-01",
+        "R2-08"
+      ]
+    },
+    {
+      "code": "R2-04",
+      "issue": "https://github.com/ORESoftware/.github/issues/48",
+      "title": "Define per-customer bucket lifecycle, quotas, cost controls and orphan cleanup",
+      "category": "lifecycle",
+      "state": "planned",
+      "dependsOn": [
+        "R2-01",
+        "R2-02",
+        "R2-09"
+      ]
+    },
+    {
+      "code": "R2-05",
+      "issue": "https://github.com/ORESoftware/.github/issues/49",
+      "title": "Audit Worker bindings, signed URLs, tenant authorization and public exposure",
+      "category": "application",
+      "state": "planned",
+      "dependsOn": [
+        "R2-01",
+        "R2-02"
+      ]
+    },
+    {
+      "code": "R2-03",
+      "issue": "https://github.com/ORESoftware/.github/issues/47",
+      "title": "Execute live cross-organization and cross-customer R2 isolation matrix",
+      "category": "isolation",
+      "state": "blocked",
+      "dependsOn": [
+        "R2-01",
+        "R2-02",
+        "R2-05",
+        "R2-08"
+      ]
+    },
+    {
+      "code": "R2-06",
+      "issue": "https://github.com/ORESoftware/.github/issues/50",
+      "title": "Establish per-organization key custody, rotation and recovery evidence",
+      "category": "crypto",
+      "state": "planned",
+      "dependsOn": [
+        "R2-01",
+        "R2-02"
+      ]
+    },
+    {
+      "code": "R2-07",
+      "issue": "https://github.com/ORESoftware/.github/issues/51",
+      "title": "Define retention, legal-hold, deletion and immutable-version policy by object class",
+      "category": "retention",
+      "state": "planned",
+      "dependsOn": [
+        "R2-01",
+        "R2-06"
+      ]
+    },
+    {
+      "code": "R2-12",
+      "issue": "https://github.com/ORESoftware/.github/issues/61",
+      "title": "Prove R2 backup, restore and jurisdiction/failover behavior",
+      "category": "recovery",
+      "state": "planned",
+      "dependsOn": [
+        "R2-06",
+        "R2-07"
+      ]
+    },
+    {
+      "code": "R2-11",
+      "issue": "https://github.com/ORESoftware/.github/issues/58",
+      "title": "Publish nightly R2 drift, isolation and admission receipts through ores-otel",
+      "category": "observability",
+      "state": "blocked",
+      "dependsOn": [
+        "R2-01",
+        "R2-02",
+        "R2-03",
+        "R2-04",
+        "R2-05",
+        "R2-06",
+        "R2-07",
+        "R2-08",
+        "R2-09",
+        "R2-10",
+        "R2-12"
+      ]
+    }
+  ],
+  "organizations": [
+    {
+      "organization": "sonus-auris",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    },
+    {
+      "organization": "zed-pkg",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    },
+    {
+      "organization": "fiducia-cloud",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    },
+    {
+      "organization": "elenkos-systems",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    },
+    {
+      "organization": "cliptown",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    },
+    {
+      "organization": "memebank",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    },
+    {
+      "organization": "messaging-intel",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    },
+    {
+      "organization": "daedalus-fab",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    },
+    {
+      "organization": "quaestor-ledger",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    },
+    {
+      "organization": "ores-legal",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    },
+    {
+      "organization": "claimgraph",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    }
+  ]
+}

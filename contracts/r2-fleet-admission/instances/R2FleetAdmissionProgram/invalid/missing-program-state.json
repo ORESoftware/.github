@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "ores.r2-fleet-admission/v1",
+  "linearIssue": "DEN-3109",
+  "githubProgramIssue": "https://github.com/ORESoftware/.github/issues/39",
+  "generatedEvidenceRole": "comparison_evidence_only",
+  "authorityPrecedence": "none",
+  "tasks": [
+    {
+      "code": "R2-01",
+      "issue": "https://github.com/ORESoftware/.github/issues/42",
+      "title": "Build authenticated bucket inventory and single-state-owner ledger",
+      "category": "inventory_state",
+      "state": "planned",
+      "dependsOn": []
+    }
+  ],
+  "organizations": [
+    {
+      "organization": "sonus-auris",
+      "namespaceState": "verified",
+      "liveInventory": "unknown",
+      "stateOwnership": "unknown",
+      "credentialScope": "unknown",
+      "readIsolation": "not_executed",
+      "writeIsolation": "not_executed",
+      "applicationAuthorization": "not_executed",
+      "keyRecovery": "not_executed",
+      "retention": "not_executed",
+      "recovery": "not_executed",
+      "documentAdmission": "blocked"
+    }
+  ]
+}

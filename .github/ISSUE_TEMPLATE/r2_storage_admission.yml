@@ -1,0 +1,112 @@
+name: R2 storage admission slice
+about: Track one bounded organization, environment, bucket role, or per-customer R2 admission slice
+title: "[R2 admission] "
+labels: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for one bounded R2 admission slice. Read `docs/r2-fleet-admission.md` first. This public issue must not contain account IDs, bucket names, object keys, customer identifiers, access-key IDs, secret paths, Terraform state, provider payloads, credentials, private keys, or customer data.
+
+  - type: input
+    id: tracking
+    attributes:
+      label: Linear and parent tracking
+      description: Provide an exact Linear identifier and parent GitHub issue. Do not paste private issue content.
+      placeholder: "DEN-3109; ORESoftware/.github#39"
+    validations:
+      required: true
+
+  - type: input
+    id: organization
+    attributes:
+      label: GitHub organization
+      description: Public organization login only. Do not include provider account identifiers.
+      placeholder: "example-org"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Physical bucket scope
+      options:
+        - Organization-level bucket
+        - Per-customer bucket policy
+        - Legacy bucket migration
+        - Platform bucket
+        - Evidence-only / no live resource
+    validations:
+      required: true
+
+  - type: textarea
+    id: logical_roles
+    attributes:
+      label: Logical roles and environments
+      description: List public-safe logical purposes and environments. Do not include actual bucket names or endpoints.
+      placeholder: "documents/prod; transient uploads/stage"
+    validations:
+      required: true
+
+  - type: textarea
+    id: authorities
+    attributes:
+      label: Contract authorities and consumers
+      description: Identify TypeSpec and independently authored JSON Schema paths, TJSV revision, runtime consumers, and generated evidence. Do not name private secret locations.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: evidence_state
+    attributes:
+      label: Current evidence state
+      options:
+        - unknown
+        - not_executed
+        - stale
+        - stopped_for_evaluation
+        - failed
+        - passed
+    validations:
+      required: true
+
+  - type: textarea
+    id: gates
+    attributes:
+      label: Missing admission gates
+      description: State which namespace, inventory, state-owner, credential, data-plane, application, cryptographic, retention, recovery, or operational gates remain.
+    validations:
+      required: true
+
+  - type: textarea
+    id: tests
+    attributes:
+      label: Exact-revision validation plan
+      description: List deterministic/offline tests, TJSV and provider checks, protected live canaries, mandatory outcomes, and evidence expiry.
+    validations:
+      required: true
+
+  - type: textarea
+    id: rollout
+    attributes:
+      label: Rollout, migration and rollback
+      description: Describe idempotency, state ownership, canary order, partial failure, rollback and legacy-resource handling. A failed lookup must never authorize creation.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety and authority checklist
+      options:
+        - label: TypeSpec and independently authored JSON Schema remain peer authorities; generated schema and Contract IR are evidence only.
+          required: true
+        - label: Unknown, stale, partial, unsupported, skipped or zero-step evidence will not be counted as passed.
+          required: true
+        - label: No provider identifier, actual bucket name, object key, customer identifier, credential, private key, state snapshot or provider payload is included here.
+          required: true
+        - label: This issue alone does not authorize create, import, apply, move, delete, credential rotation, token revocation, retention changes or customer-data probes.
+          required: true
+        - label: I will preserve concurrent work and will not rebase, stash, reset, force-push or bypass required checks.
+          required: true
