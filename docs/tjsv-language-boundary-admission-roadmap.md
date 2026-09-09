@@ -58,6 +58,34 @@ GitHub issue `ORESoftware/.github#36` is the program index. The following child 
 | `#60` | Aggregate boundary receipts into a non-vacuous fleet evidence ledger | DEN-3982, DEN-3043, DEN-3440 | Fleet status distinguishes passed/stale/missing/zero-step/failed/unsupported/unverified with links to primary evidence. |
 | `#63` | Add mutation, fuzz and vacuity resistance to boundary admission | DEN-3830, DEN-3828, DEN-3959 | Empty or non-discriminating corpora/manifests cannot produce misleading green evidence. |
 
+### Validation-runtime specialization wave
+
+The Zod/Serde/Dart test-org canaries exposed a second layer of work below the broad language-boundary program. These tasks are specialized children of the program above, not a competing roadmap.
+
+| GitHub issue | Specialized work | Parent / dependency | Outcome |
+| --- | --- | --- | --- |
+| `#65` | Compare canonical admitted outputs and stable validation-error evidence, not verdicts only | DEN-3828; feeds `#68`, `#88` | Detect trim/default/coercion/error-shape drift even when all validators return the same accept/reject verdict. |
+| `#68` | Prove tri-state PATCH semantics for missing / explicit null / present value | `#65`, `#76`; DEN-3959 | Rust/Serde, Zod and Dart preserve update intent through parse, round-trip and application. |
+| `#70` | Define an explicit cross-runtime JSON Schema `format` assertion profile | `#54`, `#90`; DEN-3959 | Format behavior is versioned and explicit rather than inherited accidentally from library defaults. |
+| `#71` | Prove public constructors/deserializers cannot bypass runtime validation | DEN-3959, DEN-3828 | Passing helper validators are insufficient unless normal construction paths also reject invalid domain values. |
+| `#76` | Implement the `*-test` runtime-conformance specialization of canonical reusable admission | implementation child of `#37`; feeds `#60` | Three test orgs share one immutable TJSV runtime-admission workflow instead of copying orchestration. |
+| `#79` | Inventory actual fleet validators, constructor paths, TJSV pins and missing test-org evidence in `ores-cli` | discovery feeder for `#60`; DEN-3043 | Find where validation is missing before a receipt exists; never infer runtime enforcement from dependencies alone. |
+| `#82` | Compare product-facing validators against direct Draft 2020-12 evaluators | implementation canary under `#90`; DEN-3959 | Catch library-rule drift even while TypeSpec/JSON Schema source parity remains green. |
+
+These specialized tasks intentionally reuse existing work instead of cloning it: browser execution remains in `#38` / existing browser tickets such as DEN-554; reusable admission remains owned by `#37`; validator diversity remains owned by `#90`; fleet evidence aggregation remains owned by `#60`; Zed frozen install/release work remains in its existing Zed issues.
+
+### Additional concurrent execution wave
+
+Other current children already opened under `#36` remain part of the same program and should be composed with the validation-runtime tasks above:
+
+- `#73` — migrate operational `api-docs` admission/generation/audit CLIs from Python to Rust through differential parity rather than a big-bang rewrite.
+- `#77` — one machine-readable TJSV consumer lock and fail-closed pin/reference drift gate.
+- `#81` — bounded schema/reference/evidence/process/resource evaluation and explicit over-budget failure classes.
+- `#85` — backward/forward contract-evolution profiles spanning generated clients, runtimes, stored/event payloads and rolling deployments.
+- `#88` — parsed HTTP response/error/metadata peer-authority admission above request-only evidence.
+- `#90` — genuinely independent JSON Schema validator lineages for high-assurance profiles.
+- `#93` — semantic salvage of unique work from stale `api-docs#36` without destructive history rewriting or closing the historical PR by automation.
+
 Existing Linear work such as DEN-3958 (SDK-language enforcement), DEN-3959 (dual authorities), DEN-3043 (fleet linting), DEN-3828 (cross-language compiler/conformance runner), DEN-3982 (recurring fleet cross-check) and the existing provenance tickets remains authoritative for its broader scope. These GitHub issues should link to and reuse that work rather than fork it.
 
 ## Recommended execution order
@@ -65,25 +93,35 @@ Existing Linear work such as DEN-3958 (SDK-language enforcement), DEN-3959 (dual
 ### Phase 0 — standardize what a receipt means
 
 1. `#54` assurance-profile registry and claim vocabulary.
-2. `#37` canonical reusable admission action/workflow using the reviewed TJSV verifier.
-3. Prove the reusable path in at least one real `*-interfaces`/`*-clients` family before bulk rollout.
+2. `#65` runtime output/error evidence protocol so future canaries compare behavior, not only verdicts.
+3. `#37` canonical reusable admission action/workflow using the reviewed TJSV verifier.
+4. `#76` runtime/test-org specialization of that reusable workflow in at least three `*-test` organizations.
+5. `#77` machine-readable consumer lock so code, docs, runtime evidence and workflows cannot silently pin different validator/source revisions.
 
-### Phase 1 — broaden executable coverage
+### Phase 1 — harden representation semantics and construction
 
-4. `#43` Go + Gleam first-class runtime evidence.
-5. `#46` platform-qualified OS/architecture/WASM matrix.
-6. `#63` mutation/fuzz/vacuity gates applied to the canonical profile and consumer examples.
+6. `#68` missing/null/value PATCH semantics.
+7. `#70` explicit `format` assertion policy, coordinated with `#90`.
+8. `#71` constructor/deserializer bypass proof in shared core APIs.
+9. `#82` library-vs-direct-schema evaluator canary under `#90`.
+10. `#63` mutation/fuzz/vacuity gates plus `#81` bounded execution/resource policy.
 
-### Phase 2 — prove stronger real-world boundaries
+### Phase 2 — broaden executable coverage
 
-7. `#38` raw HTTP/WebSocket/browser/live-test-server evidence.
-8. `#40` build/executable provenance integrated with existing Sigstore/SLSA and artifact-provenance work.
+11. `#43` Go + Gleam first-class runtime evidence.
+12. `#46` platform-qualified OS/architecture/WASM matrix.
+13. `#88` parsed HTTP response/error/metadata boundary.
+14. `#38` raw HTTP/WebSocket/browser/live-test-server evidence.
+15. `#85` contract-evolution / rolling-upgrade profiles.
+16. `#40` build/executable provenance integrated with existing Sigstore/SLSA and artifact-provenance work.
 
 ### Phase 3 — make the evidence operational fleet-wide
 
-9. `#55` exact-pin drift discovery and upgrade PR automation.
-10. `#60` durable fleet evidence ledger and status vocabulary.
-11. `#57` package/release/deployment promotion gates consuming the declared assurance profile.
+17. `#79` read-only fleet validator/TJSV gap inventory in `ores-cli`.
+18. `#55` exact-pin drift discovery and upgrade PR automation.
+19. `#60` durable fleet evidence ledger and status vocabulary.
+20. `#57` package/release/deployment promotion gates consuming the declared assurance profile.
+21. `#73` and `#93` complete the Rust CLI migration and stale-branch semantic salvage without reducing coverage.
 
 ## Fleet rollout rules
 
@@ -95,13 +133,15 @@ Existing Linear work such as DEN-3958 (SDK-language enforcement), DEN-3959 (dual
 - A failed upgrade remains blocked; do not silently fall back to an older validator while claiming the newer profile passed.
 - Historical receipts remain historical evidence. They do not automatically certify current `main`.
 - Release/deployment gates must verify the exact release commit and, for stronger profiles, the exact artifact digest.
+- Runtime verdict parity does not imply output/normalization/error parity; stronger profiles must name the extra evidence they require.
+- Direct JSON Schema evaluators and runtime validators remain corroborating evidence. They never become majority-rule authorities over either authored source lane.
 
 ## Linear synchronization note
 
-On 2026-09-09 an attempt to create a new Linear program issue was rejected because the workspace had reached its current issue-count limit. No new Linear issue identifier was fabricated. Until capacity is available, `ORESoftware/.github#36` and its child issues are the executable task records; DEN-3830 should carry the cross-link and evidence updates, and this document is the durable portfolio roadmap.
+On 2026-09-09 an attempt to create additional Linear issues was rejected because the workspace had reached its current issue-count limit. No new Linear issue identifier was fabricated. Until capacity is available, `ORESoftware/.github#36` and its child issues are the executable task records; DEN-3830/DEN-3959/DEN-3828/DEN-3043/DEN-3982 carry cross-links, and the Linear document `Validation runtime convergence — next task map (2026-09-09)` records the specialized execution order.
 
 When Linear capacity is restored, create or map work packages only where they add ownership/status value; do not duplicate existing DEN-3958/DEN-3959/DEN-3043/DEN-3828/DEN-3982/provenance scopes merely to mirror GitHub issue count.
 
 ## Completion definition
 
-This program is not complete because one sample consumer is green. Completion requires the agreed assurance profiles to be reusable, non-vacuous, platform/runtime qualified, integrated with the selected real product families, represented in the fleet evidence ledger, and enforced at the release boundary where policy requires them. Every stronger claim must remain traceable to exact retained evidence.
+This program is not complete because one sample consumer is green. Completion requires the agreed assurance profiles to be reusable, non-vacuous, platform/runtime qualified, integrated with selected real product families, represented in the fleet evidence ledger, and enforced at the release boundary where policy requires them. Every stronger claim must remain traceable to exact retained evidence.
