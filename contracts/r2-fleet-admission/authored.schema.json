@@ -3,8 +3,6 @@
   "$id": "ores.r2-fleet-admission.schema.json",
   "$defs": {
     "AdmissionState": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "AdmissionState",
       "type": "string",
       "enum": [
         "planned",
@@ -15,8 +13,6 @@
       ]
     },
     "EvidenceState": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "EvidenceState",
       "type": "string",
       "enum": [
         "unknown",
@@ -28,8 +24,6 @@
       ]
     },
     "TaskCategory": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "TaskCategory",
       "type": "string",
       "enum": [
         "inventory_state",
@@ -47,24 +41,18 @@
       ]
     },
     "GeneratedEvidenceRole": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "GeneratedEvidenceRole",
       "type": "string",
       "enum": [
         "comparison_evidence_only"
       ]
     },
     "AuthorityPrecedence": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "AuthorityPrecedence",
       "type": "string",
       "enum": [
         "none"
       ]
     },
     "R2AdmissionTask": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "R2AdmissionTask",
       "type": "object",
       "properties": {
         "code": {
@@ -100,8 +88,6 @@
       "unevaluatedProperties": false
     },
     "R2OrganizationAdmission": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "R2OrganizationAdmission",
       "type": "object",
       "properties": {
         "organization": {
@@ -158,8 +144,6 @@
       "unevaluatedProperties": false
     },
     "R2FleetAdmissionProgram": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "R2FleetAdmissionProgram",
       "type": "object",
       "properties": {
         "schemaVersion": {
