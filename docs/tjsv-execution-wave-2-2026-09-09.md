@@ -4,7 +4,7 @@ Status: active, 2026-09-09
 Parent program: [`ORESoftware/.github#36`](https://github.com/ORESoftware/.github/issues/36)  
 Primary Linear context: `DEN-3830`, `DEN-3959`
 
-This is a companion execution ledger to [the TJSV language-boundary admission rollout roadmap](./tjsv-language-boundary-admission-roadmap.md). It records residual work discovered after the initial roadmap, validator, consumer, Linear, and stale-branch audit. It does not replace the original backlog; it adds bounded implementation slices that were not already owned by the reusable-CI, live-transport, provenance, platform, release, fleet-ledger, upgrade, or mutation tasks.
+This is a companion execution ledger to [the TJSV language-boundary rollout and evidence-hardening roadmap](./tjsv-language-boundary-rollout.md). It records residual work discovered after the initial roadmap, validator, consumer, Linear, and stale-branch audit. It does not replace the original backlog; it adds bounded implementation slices that were not already owned by the reusable-CI, live-transport, provenance, platform, release, fleet-ledger, upgrade, or mutation tasks.
 
 ## Audit snapshot
 
