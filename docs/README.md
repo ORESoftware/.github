@@ -9,6 +9,9 @@
 - [TJSV language-boundary rollout and evidence hardening](./tjsv-language-boundary-rollout.md)
 - [OWLS shared WASM loader next-wave execution plan](./wasm-loader-next-wave-2026-09-09.md)
 - [Red PRs, stale PRs, and mandatory cherry-pick](./stale-and-red-pull-requests.md)
+- [TJSV language-boundary admission rollout roadmap](./tjsv-language-boundary-admission-roadmap.md)
+- [TJSV execution wave 2 — Rust-first and evidence hardening](./tjsv-execution-wave-2-2026-09-09.md)
+- [TJSV runtime validation convergence — execution wave 3](./tjsv-runtime-validation-wave-3-2026-09-09.md)
 - [Cloudflare edge cache warming](./cloudflare-edge-cache-warming.md)
 
 The reconciliation artifacts preserve the August 3, 2026 audit snapshot. Current work status remains authoritative in Linear and current landing evidence remains authoritative in GitHub.
