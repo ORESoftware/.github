@@ -7,6 +7,7 @@
 - [Linear and GitHub operating model](./linear-github-operating-model.md)
 - [Exact-head CI and PR evidence backlog — 2026-09-09](./exact-head-ci-and-pr-evidence-backlog-2026-09-09.md)
 - [TJSV language-boundary rollout and evidence hardening](./tjsv-language-boundary-rollout.md)
+- [Messaging Intel DEN-3975 TJSV QA/research boundary follow-through](./messaging-intel-den-3975-tjsv-follow-through-2026-09-09.md)
 - [OWLS shared WASM loader next-wave execution plan](./wasm-loader-next-wave-2026-09-09.md)
 - [Red PRs, stale PRs, and mandatory cherry-pick](./stale-and-red-pull-requests.md)
 - [TJSV language-boundary admission rollout roadmap](./tjsv-language-boundary-admission-roadmap.md)
