@@ -5,6 +5,7 @@
 - [Reconciled 60-item task inventory (CSV)](./chatgpt-task-inventory-reconciled-2026-08-03.csv)
 - [GitHub organization, GitHub Project, and Linear registry](./github-linear-project-registry.md)
 - [Linear and GitHub operating model](./linear-github-operating-model.md)
+- [TJSV language-boundary rollout and evidence hardening](./tjsv-language-boundary-rollout.md)
 - [OWLS shared WASM loader next-wave execution plan](./wasm-loader-next-wave-2026-09-09.md)
 - [Red PRs, stale PRs, and mandatory cherry-pick](./stale-and-red-pull-requests.md)
 - [Cloudflare edge cache warming](./cloudflare-edge-cache-warming.md)
