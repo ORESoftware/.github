@@ -64,13 +64,16 @@ The Zod/Serde/Dart test-org canaries exposed a second layer of work below the br
 
 | GitHub issue | Specialized work | Parent / dependency | Outcome |
 | --- | --- | --- | --- |
-| `#65` | Compare canonical admitted outputs and stable validation-error evidence, not verdicts only | DEN-3828; feeds `#68`, `#88` | Detect trim/default/coercion/error-shape drift even when all validators return the same accept/reject verdict. |
+| `#65` | Compare canonical admitted outputs and stable validation-error evidence, not verdicts only | DEN-3828; feeds `#68`, `#88`, `#137`, `#138`, `#140` | Detect trim/default/coercion/error-shape drift even when all validators return the same accept/reject verdict. |
 | `#68` | Prove tri-state PATCH semantics for missing / explicit null / present value | `#65`, `#76`; DEN-3959 | Rust/Serde, Zod and Dart preserve update intent through parse, round-trip and application. |
 | `#70` | Define an explicit cross-runtime JSON Schema `format` assertion profile | `#54`, `#90`; DEN-3959 | Format behavior is versioned and explicit rather than inherited accidentally from library defaults. |
 | `#71` | Prove public constructors/deserializers cannot bypass runtime validation | DEN-3959, DEN-3828 | Passing helper validators are insufficient unless normal construction paths also reject invalid domain values. |
 | `#76` | Implement the `*-test` runtime-conformance specialization of canonical reusable admission | implementation child of `#37`; feeds `#60` | Three test orgs share one immutable TJSV runtime-admission workflow instead of copying orchestration. |
 | `#79` | Inventory actual fleet validators, constructor paths, TJSV pins and missing test-org evidence in `ores-cli` | discovery feeder for `#60`; DEN-3043 | Find where validation is missing before a receipt exists; never infer runtime enforcement from dependencies alone. |
 | `#82` | Compare product-facing validators against direct Draft 2020-12 evaluators | implementation canary under `#90`; DEN-3959 | Catch library-rule drift even while TypeSpec/JSON Schema source parity remains green. |
+| `#137` | Define exact numeric representation and precision profiles | `#65`, `#76`; DEN-3959 | Detect JavaScript safe-integer loss, int64/uint64 representation drift, decimal coercion, overflow and lossy round-trips. |
+| `#138` | Prove tagged-union/discriminator/enum parity | `#65`, `#82`, `#85`; DEN-3959 | Zod, Serde, Dart and direct evaluators choose the same variant, preserve wire tags and reject ambiguous `oneOf` payloads. |
+| `#140` | Define portable JSON Schema `pattern` / regex semantics | `#54`, `#82`, `#90`, `#81`; DEN-3959 | A versioned portable regex subset prevents JavaScript, Rust, Dart and schema evaluators from silently enforcing different languages. |
 
 These specialized tasks intentionally reuse existing work instead of cloning it: browser execution remains in `#38` / existing browser tickets such as DEN-554; reusable admission remains owned by `#37`; validator diversity remains owned by `#90`; fleet evidence aggregation remains owned by `#60`; Zed frozen install/release work remains in its existing Zed issues.
 
@@ -100,28 +103,31 @@ Existing Linear work such as DEN-3958 (SDK-language enforcement), DEN-3959 (dual
 
 ### Phase 1 — harden representation semantics and construction
 
-6. `#68` missing/null/value PATCH semantics.
-7. `#70` explicit `format` assertion policy, coordinated with `#90`.
-8. `#71` constructor/deserializer bypass proof in shared core APIs.
-9. `#82` library-vs-direct-schema evaluator canary under `#90`.
-10. `#63` mutation/fuzz/vacuity gates plus `#81` bounded execution/resource policy.
+6. `#137` exact numeric representation and precision profiles.
+7. `#138` tagged union/discriminator/enum parity.
+8. `#68` missing/null/value PATCH semantics.
+9. `#70` explicit `format` assertion policy, coordinated with `#90`.
+10. `#140` portable regex/pattern semantics, coordinated with `#81` and `#90`.
+11. `#71` constructor/deserializer bypass proof in shared core APIs.
+12. `#82` library-vs-direct-schema evaluator canary under `#90`.
+13. `#63` mutation/fuzz/vacuity gates plus `#81` bounded execution/resource policy.
 
 ### Phase 2 — broaden executable coverage
 
-11. `#43` Go + Gleam first-class runtime evidence.
-12. `#46` platform-qualified OS/architecture/WASM matrix.
-13. `#88` parsed HTTP response/error/metadata boundary.
-14. `#38` raw HTTP/WebSocket/browser/live-test-server evidence.
-15. `#85` contract-evolution / rolling-upgrade profiles.
-16. `#40` build/executable provenance integrated with existing Sigstore/SLSA and artifact-provenance work.
+14. `#43` Go + Gleam first-class runtime evidence.
+15. `#46` platform-qualified OS/architecture/WASM matrix.
+16. `#88` parsed HTTP response/error/metadata boundary.
+17. `#38` raw HTTP/WebSocket/browser/live-test-server evidence.
+18. `#85` contract-evolution / rolling-upgrade profiles.
+19. `#40` build/executable provenance integrated with existing Sigstore/SLSA and artifact-provenance work.
 
 ### Phase 3 — make the evidence operational fleet-wide
 
-17. `#79` read-only fleet validator/TJSV gap inventory in `ores-cli`.
-18. `#55` exact-pin drift discovery and upgrade PR automation.
-19. `#60` durable fleet evidence ledger and status vocabulary.
-20. `#57` package/release/deployment promotion gates consuming the declared assurance profile.
-21. `#73` and `#93` complete the Rust CLI migration and stale-branch semantic salvage without reducing coverage.
+20. `#79` read-only fleet validator/TJSV gap inventory in `ores-cli`.
+21. `#55` exact-pin drift discovery and upgrade PR automation.
+22. `#60` durable fleet evidence ledger and status vocabulary.
+23. `#57` package/release/deployment promotion gates consuming the declared assurance profile.
+24. `#73` and `#93` complete the Rust CLI migration and stale-branch semantic salvage without reducing coverage.
 
 ## Fleet rollout rules
 
@@ -135,6 +141,7 @@ Existing Linear work such as DEN-3958 (SDK-language enforcement), DEN-3959 (dual
 - Release/deployment gates must verify the exact release commit and, for stronger profiles, the exact artifact digest.
 - Runtime verdict parity does not imply output/normalization/error parity; stronger profiles must name the extra evidence they require.
 - Direct JSON Schema evaluators and runtime validators remain corroborating evidence. They never become majority-rule authorities over either authored source lane.
+- Exact numeric, union/discriminator and regex semantics must be profile-owned; generated runtimes cannot narrow those rules silently to whatever their library happens to support.
 
 ## Linear synchronization note
 
