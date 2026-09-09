@@ -95,11 +95,11 @@ Owner: `ORESoftware/typespec-json-schema-validator#79`.
 
 Now that current-input promotion is post-merge verified, make every public language-boundary Draft 2020-12 envelope and the executable verifier prove lockstep behavior. Schema-invalid envelopes must never be accepted by JavaScript, and every emitted verifier receipt must validate against its published receipt schema. Keep cross-object semantic rules explicit where JSON Schema is not the correct layer.
 
-### P0 — cross-revision splice refusal
+### P0 — cross-revision compatibility and mixed-cohort splice refusal
 
-Owners: `ORESoftware/.github#131` and parent `#36`.
+Owners: `ORESoftware/.github#85` for backward/forward cross-version compatibility evidence, `ORESoftware/.github#136` for exact multi-repository cohort and mixed-generation admission, and parent `#36`.
 
-Construct one candidate evidence graph from individually valid artifacts produced by two different source revisions. Require admission to stop even when every component is independently well-formed. Extend revision coherence beyond witness-to-witness checks to retained parity/current-input evidence, Contract IR, consumer lock, runtime/package digests, and toolchain identity where the active profile requires it.
+Construct candidate evidence graphs from individually valid artifacts produced by different source revisions and require the appropriate admission layer to stop unless the active profile carries exact admitted compatibility evidence. Extend revision/cohort coherence to retained parity/current-input evidence, Contract IR, consumer locks, runtime/package digests, dependency-graph identities, and toolchain identity where the active profile requires it. `ORESoftware/.github#131` is complementary but distinct: it owns Rust/TypeScript/Dart Lambda runtime witnesses, not cross-version compatibility or cohort policy.
 
 ### P0 — merge-result/current-base proof
 
