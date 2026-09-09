@@ -6,6 +6,7 @@ Repository-local policy wins when it is stricter or more specific. Existing proj
 
 ## Portfolio infrastructure plans
 
+- [Shared-interface admission and TJSV convergence](docs/shared-interface-admission.md) — peer-authority contracts, immutable source closure, validator-pin convergence, package/CLI admission, runtime promotion, Zed release gates, and fleet migration policy.
 - [Centralized Cloudflare edge cache warming](docs/cloudflare-edge-cache-warming.md) — provider-neutral architecture and rollout plan for 20–30 Cloudflare-fronted domains.
 - [GitHub organization Projects and certified artifact ledger — 2026-08-05](docs/github-org-projects-and-artifacts-2026-08-05.md) — immutable workflow pins, merged package artifacts, Project/Linear reconciliation, repository creation, and blockers by GitHub organization.
 - [Lambda OCI + TJSV fleet rollout](docs/lambda-oci-tjsv-rollout.md) — public-safe serverless contract, multi-architecture OCI, sidecar entrypoint, provider-adapter, cross-runtime, and evidence requirements tracked by DEN-3959.
