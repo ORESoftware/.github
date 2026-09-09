@@ -1,6 +1,3 @@
-import "@typespec/json-schema";
-using TypeSpec.JsonSchema;
-
 namespace Ores.R2Fleet;
 
 @id("AdmissionState")
@@ -14,7 +11,7 @@ enum AdmissionState {
 
 @id("EvidenceState")
 enum EvidenceState {
-  unknown: "unknown",
+  unknownState: "unknown",
   notExecuted: "not_executed",
   stale: "stale",
   stoppedForEvaluation: "stopped_for_evaluation",
