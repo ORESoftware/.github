@@ -95,7 +95,7 @@ The detailed assignments are tracked privately under DEN-3959. The public-safe w
 4. Re-evaluate stale dependency-sync PRs against current manifests, lockfiles, dependency versions, and current `main`. See #152.
 5. Bootstrap empty Lambda repositories from the verified canonical template, replacing placeholders with real domain contracts before claiming support. See #152.
 6. Audit repositories whose default branch is a feature/portability branch and normalize only through an explicit reviewed change. See #152.
-7. Roll the verified baseline through successive consumer tranches while preserving each repository's provider-specific behavior and domain authority.
+7. Roll the verified baseline through successive consumer tranches while preserving each repository's provider-specific behavior and domain authority. See #168.
 8. Add Rust + TypeScript + Dart/Flutter runtime witnesses where those runtimes are supported. See #131.
 9. Add provider adapter smoke fixtures across supported cloud/serverless targets. See #134.
 10. Add packaged-artifact tests for Node bundles and optional Bun/Deno standalone targets where relevant. See #145.
@@ -114,7 +114,8 @@ Verified merged tranches now include the canonical template plus multiple real L
 - #144 — evaluate the reusable Rust process supervisor;
 - #145 — add packaged Node/Bun/Deno artifact tests;
 - #148 — semantically salvage unique work from stale Lambda portability branches onto current `main`;
-- #152 — inventory bootstrap-only repositories, unexpected default branches, and stale dependency-sync work before any mutation.
+- #152 — inventory bootstrap-only repositories, unexpected default branches, and stale dependency-sync work before any mutation;
+- #168 — promote the next bounded verified consumer tranche from readiness evidence rather than blind fleet copying.
 
 Two failure classes must remain distinct in evidence:
 
@@ -128,6 +129,8 @@ Neither class may be relabeled as code success or bypassed with mutable refs, co
 Stale portability work is a provenance source, not a merge strategy. For each stale PR, classify every changed path as `identical_on_main`, `semantically_integrated`, `superseded`, `unique_safe`, `unique_conflicting`, or `requires_owner_decision`; inspect the merge base, current replacement, relevant history, and linked contract/runtime work before acting. Fresh salvage starts from current `main`. Cherry-pick an old commit only when the whole commit is still conceptually valid and conflict-free; otherwise reconstruct the useful intent in focused new commits. Keep the historical PR open unless a human explicitly authorizes closure.
 
 Bootstrap/default-branch/dependency discovery is read-only. Do not silently change default branches, delete branches, close dependency PRs, or scaffold an empty repository as a side effect of inventory. Before adopting the canonical template, replace placeholders with real domain contracts and preserve repository-specific provider/runtime behavior. Re-evaluate stale dependency updates against current manifests, locks, advisory context, and current `main`.
+
+A consumer may enter #168 only after #152 classifies it `ready_for_consumer_tranche` and the applicable Actions/sibling-certification state is known. Use bounded tranches rather than fleet-wide copying, preserve domain/provider-specific intent, and require exact-head evidence per consumer.
 
 ## Canonical public baseline
 
