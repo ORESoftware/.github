@@ -77,10 +77,10 @@
           "type": "string"
         },
         "category": {
-          "$ref": "TaskCategory"
+          "$ref": "#/$defs/TaskCategory"
         },
         "state": {
-          "$ref": "AdmissionState"
+          "$ref": "#/$defs/AdmissionState"
         },
         "dependsOn": {
           "type": "array",
@@ -108,37 +108,37 @@
           "type": "string"
         },
         "namespaceState": {
-          "$ref": "AdmissionState"
+          "$ref": "#/$defs/AdmissionState"
         },
         "liveInventory": {
-          "$ref": "EvidenceState"
+          "$ref": "#/$defs/EvidenceState"
         },
         "stateOwnership": {
-          "$ref": "EvidenceState"
+          "$ref": "#/$defs/EvidenceState"
         },
         "credentialScope": {
-          "$ref": "EvidenceState"
+          "$ref": "#/$defs/EvidenceState"
         },
         "readIsolation": {
-          "$ref": "EvidenceState"
+          "$ref": "#/$defs/EvidenceState"
         },
         "writeIsolation": {
-          "$ref": "EvidenceState"
+          "$ref": "#/$defs/EvidenceState"
         },
         "applicationAuthorization": {
-          "$ref": "EvidenceState"
+          "$ref": "#/$defs/EvidenceState"
         },
         "keyRecovery": {
-          "$ref": "EvidenceState"
+          "$ref": "#/$defs/EvidenceState"
         },
         "retention": {
-          "$ref": "EvidenceState"
+          "$ref": "#/$defs/EvidenceState"
         },
         "recovery": {
-          "$ref": "EvidenceState"
+          "$ref": "#/$defs/EvidenceState"
         },
         "documentAdmission": {
-          "$ref": "AdmissionState"
+          "$ref": "#/$defs/AdmissionState"
         }
       },
       "required": [
@@ -174,24 +174,24 @@
           "type": "string"
         },
         "programState": {
-          "$ref": "AdmissionState"
+          "$ref": "#/$defs/AdmissionState"
         },
         "generatedEvidenceRole": {
-          "$ref": "GeneratedEvidenceRole"
+          "$ref": "#/$defs/GeneratedEvidenceRole"
         },
         "authorityPrecedence": {
-          "$ref": "AuthorityPrecedence"
+          "$ref": "#/$defs/AuthorityPrecedence"
         },
         "tasks": {
           "type": "array",
           "items": {
-            "$ref": "R2AdmissionTask"
+            "$ref": "#/$defs/R2AdmissionTask"
           }
         },
         "organizations": {
           "type": "array",
           "items": {
-            "$ref": "R2OrganizationAdmission"
+            "$ref": "#/$defs/R2OrganizationAdmission"
           }
         }
       },
