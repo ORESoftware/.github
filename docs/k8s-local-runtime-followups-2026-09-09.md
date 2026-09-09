@@ -22,7 +22,7 @@ The branch has substantive credential-free local Kubernetes evidence in addition
 
 The uploaded `namespace-kind-smoke-34382598985-1` artifact records 1,366 migration identities, committed/generated inventory equality, zero destructive-cleanup authorizations, `providerWrites=false`, `secretInputs=false`, and RBAC evidence `list-pods=yes` / `get-secrets=no`.
 
-All exact-head workflows are green except `repo checks / backend pins + private deployment contracts`. The narrow `remote/libs` checkout succeeds before that lane fails closed at the owner-scoped GitHub App credential boundary.
+All exact-head workflows are green except `repo checks / backend pins + private deployment contracts`. The narrow `remote/libs` checkout succeeds before that lane fails closed because the repository-level GitHub App secrets were never hydrated.
 
 ### `ORESoftware/k8s-cluster#1543`
 
@@ -38,15 +38,33 @@ DEN-1032 already has a separate draft implementation of a reusable local-runtime
 
 TypeSpec and authored JSON Schema remain independent top-level authorities. Generated schemas, language bindings, witnesses, and receipts are downstream evidence and are not a third authority.
 
-## Discovered dependency: completed DEN-1537 work has not reached `dev`
+## External AWS OIDC bootstrap blocker
 
-DEN-1537 is correctly marked complete: `ORESoftware/k8s-cluster#1546` merged to `main` as `d15aa4c56719edaf929f9308acf0622aa0d2be28` and added bounded trusted-main AWS OIDC role failover for GitHub App bootstrap.
+DEN-1537 is correctly marked complete at the software-contract level: `ORESoftware/k8s-cluster#1546` merged to `main` as `d15aa4c56719edaf929f9308acf0622aa0d2be28` and added bounded trusted-main AWS OIDC role failover for GitHub App bootstrap.
 
-`#1540` targets `dev`. Its remaining private-backend failure therefore represents a branch-integration gap, not permission to redesign the GitHub App boundary or add a PAT fallback.
+The trusted-main bootstrap then actually executed as Actions run `34370671019`. This resolves the earlier ambiguity about `main` versus `dev`: repository Actions secrets would be visible to trusted PR jobs once hydration succeeds, so forward-porting the bootstrap workflow into `dev` is not the immediate unblocker.
 
-Canonical GitHub tracking remains `ORESoftware/k8s-cluster#886`. The next step is to compare current `main`, current `dev`, `#1546`, and `#1540`, then semantically forward-port the reviewed recovery into `dev` while preserving newer `dev` work. The exact private-backend job must then execute every private deployment contract and pass.
+The post-merge run proved the software-side recovery behaved correctly and fail-closed:
 
-Do not use rebase, reset, stash, force-push, broad PATs, credential-bearing URLs, broadened repository allowlists, or skipped private checks to accomplish this.
+- exact trusted-main checkout passed;
+- the protected selector self-test passed;
+- the exact 32-repository GitHub App allowlist passed;
+- `K8S_SUBMODULE_BOOTSTRAP_ROLE_ARN` was not configured, so the dedicated role slot skipped;
+- `AWS_ROLE_TO_ASSUME` was configured, but both STS retries failed with `Not authorized to perform sts:AssumeRoleWithWebIdentity`;
+- `REMOTE_DEV_AWS_ROLE_TO_ASSUME` was configured and failed with the same STS denial;
+- `AWS_OIDC_ROLE_ARN` and `AWS_ECR_ROLE_ARN` were not configured, so those slots skipped;
+- the final `Require one approved AWS OIDC role` assertion failed;
+- protected SSM secret hydration never ran.
+
+Canonical GitHub recovery tracking remains `ORESoftware/k8s-cluster#886`. The next step is owner-controlled AWS IAM/OIDC remediation:
+
+1. provision `K8S_SUBMODULE_BOOTSTRAP_ROLE_ARN` or correct one approved existing role's web-identity trust for exact subject `repo:ORESoftware/k8s-cluster:ref:refs/heads/main` and audience `sts.amazonaws.com`;
+2. retain only the narrowly required SSM authority for the protected administration instance;
+3. rerun the trusted-main bootstrap and require one approved role slot to succeed plus repository-secret hydration;
+4. verify only the two repository secret names exist, never their values;
+5. rerun `k8s-cluster#1540` and require `backend pins + private deployment contracts` to execute the private contracts and pass.
+
+Do not use a PAT fallback, credential-bearing URL, broadened repository allowlist, secret logging, or skipped private checks. A later surgical `main`/`dev` parity port may still be useful because those histories are heavily divergent, but it does not fix repository-level secret hydration.
 
 ## New implementation tasks
 
@@ -115,11 +133,11 @@ Changing implementation language does not authorize changing namespace policy, d
 - **DEN-841** already owns evaluation of microVM-backed Kubernetes isolation, including Kata/Firecracker/gVisor comparison and RuntimeClass policy. Local-runtime follow-ups may supply a reusable test substrate, but must not create a second microVM program.
 - **DEN-1032** remains the product-neutral three-cluster K3s/recovery parent. The issues above are components of that platform, not replacements for its mesh, GitOps, backup/restore, WAN-partition, secret-rotation, observability, and cloud-migration acceptance criteria.
 - **DEN-2786** remains the authority for ownership-aware `dd/` namespace migration. Local kind evidence verifies behavior; it does not declare the migration complete.
-- **DEN-1537** remains complete for the reviewed GitHub App bootstrap design. `k8s-cluster#886` owns the current branch-integration proof needed by `dev`.
+- **DEN-1537** remains complete for the reviewed GitHub App bootstrap software contract. `k8s-cluster#886` owns the remaining AWS OIDC trust and hydration proof.
 
 ## Recommended execution order
 
-1. **Unblock the authoritative `dev` branch:** use `k8s-cluster#886` to semantically forward-port the merged `#1546` recovery from `main` to `dev`, then require the private-backend lane to execute and pass.
+1. **Restore repository-secret hydration:** use `k8s-cluster#886` to repair or provision the trusted-main AWS OIDC role, rerun hydration, verify only the repository secret names, and require `#1540`'s private-backend lane to execute and pass.
 2. **Unify local evidence:** implement `#1547` so DEN-1032 and DEN-2786 share one RuntimeProfile/evidence vocabulary with TJSV parity.
 3. **Expand platform coverage:** implement `#1548` and `#1549` against the unified contract. They may proceed in parallel after the authority/evidence shape is stable.
 4. **Reduce Python:** implement `#1550` with Python↔Rust golden parity before switching CI callers.
@@ -144,12 +162,12 @@ Canonical Linear parents:
 
 - DEN-1032 — reusable local K3s platform and recovery harness;
 - DEN-2786 — ownership-aware namespace migration;
-- DEN-1537 — GitHub App private-backend CI recovery, completed implementation;
+- DEN-1537 — GitHub App private-backend CI recovery software contract, completed; AWS trust/hydration proof remains external;
 - DEN-723 — Daedalus fleet integration carrier that currently contains `#1540`.
 
 GitHub execution surfaces:
 
-- `ORESoftware/k8s-cluster#886` — `main` → `dev` DEN-1537 recovery integration;
+- `ORESoftware/k8s-cluster#886` — trusted-main AWS OIDC role/trust and repository-secret hydration recovery;
 - `ORESoftware/k8s-cluster#1540` — current exact-head Daedalus/namespace/local-kind carrier;
 - `ORESoftware/k8s-cluster#1543` — RuntimeProfile/TJSV local runtime contracts;
 - `ORESoftware/k8s-cluster#1547` — unified RuntimeProfile/evidence contract;
