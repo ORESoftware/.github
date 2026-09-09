@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ores.r2-fleet-admission.schema.json",
+  "$defs": {
+    "AdmissionState": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "AdmissionState",
+      "type": "string",
+      "enum": [
+        "planned",
+        "in_progress",
+        "blocked",
+        "verified",
+        "not_applicable"
+      ]
+    },
+    "EvidenceState": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "EvidenceState",
+      "type": "string",
+      "enum": [
+        "unknown",
+        "not_executed",
+        "stale",
+        "stopped_for_evaluation",
+        "failed",
+        "passed"
+      ]
+    },
+    "TaskCategory": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "TaskCategory",
+      "type": "string",
+      "enum": [
+        "inventory_state",
+        "credentials",
+        "ci",
+        "contracts",
+        "migration",
+        "lifecycle",
+        "application",
+        "isolation",
+        "crypto",
+        "retention",
+        "observability",
+        "recovery"
+      ]
+    },
+    "GeneratedEvidenceRole": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "GeneratedEvidenceRole",
+      "type": "string",
+      "enum": [
+        "comparison_evidence_only"
+      ]
+    },
+    "AuthorityPrecedence": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "AuthorityPrecedence",
+      "type": "string",
+      "enum": [
+        "none"
+      ]
+    },
+    "R2AdmissionTask": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "R2AdmissionTask",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "issue": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "category": {
+          "$ref": "TaskCategory"
+        },
+        "state": {
+          "$ref": "AdmissionState"
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "code",
+        "issue",
+        "title",
+        "category",
+        "state",
+        "dependsOn"
+      ],
+      "unevaluatedProperties": false
+    },
+    "R2OrganizationAdmission": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "R2OrganizationAdmission",
+      "type": "object",
+      "properties": {
+        "organization": {
+          "type": "string"
+        },
+        "namespaceState": {
+          "$ref": "AdmissionState"
+        },
+        "liveInventory": {
+          "$ref": "EvidenceState"
+        },
+        "stateOwnership": {
+          "$ref": "EvidenceState"
+        },
+        "credentialScope": {
+          "$ref": "EvidenceState"
+        },
+        "readIsolation": {
+          "$ref": "EvidenceState"
+        },
+        "writeIsolation": {
+          "$ref": "EvidenceState"
+        },
+        "applicationAuthorization": {
+          "$ref": "EvidenceState"
+        },
+        "keyRecovery": {
+          "$ref": "EvidenceState"
+        },
+        "retention": {
+          "$ref": "EvidenceState"
+        },
+        "recovery": {
+          "$ref": "EvidenceState"
+        },
+        "documentAdmission": {
+          "$ref": "AdmissionState"
+        }
+      },
+      "required": [
+        "organization",
+        "namespaceState",
+        "liveInventory",
+        "stateOwnership",
+        "credentialScope",
+        "readIsolation",
+        "writeIsolation",
+        "applicationAuthorization",
+        "keyRecovery",
+        "retention",
+        "recovery",
+        "documentAdmission"
+      ],
+      "unevaluatedProperties": false
+    },
+    "R2FleetAdmissionProgram": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "R2FleetAdmissionProgram",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "ores.r2-fleet-admission/v1"
+        },
+        "linearIssue": {
+          "type": "string",
+          "const": "DEN-3109"
+        },
+        "githubProgramIssue": {
+          "type": "string"
+        },
+        "programState": {
+          "$ref": "AdmissionState"
+        },
+        "generatedEvidenceRole": {
+          "$ref": "GeneratedEvidenceRole"
+        },
+        "authorityPrecedence": {
+          "$ref": "AuthorityPrecedence"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "R2AdmissionTask"
+          }
+        },
+        "organizations": {
+          "type": "array",
+          "items": {
+            "$ref": "R2OrganizationAdmission"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "linearIssue",
+        "githubProgramIssue",
+        "programState",
+        "generatedEvidenceRole",
+        "authorityPrecedence",
+        "tasks",
+        "organizations"
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}
