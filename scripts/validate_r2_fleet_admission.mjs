@@ -90,11 +90,20 @@ function assertNoForbiddenFields(value, pointer = '#') {
   }
 }
 
+function filesRecursively(path) {
+  const files = [];
+  for (const name of readdirSync(path)) {
+    const child = join(path, name);
+    if (statSync(child).isDirectory()) files.push(...filesRecursively(child));
+    else files.push(child);
+  }
+  return files;
+}
+
 function assertAcyclic(tasks) {
   const byCode = new Map(tasks.map((task) => [task.code, task]));
   const visiting = new Set();
   const visited = new Set();
-
   function visit(code) {
     if (visited.has(code)) return;
     assert(!visiting.has(code), `task dependency cycle includes ${code}`);
@@ -104,16 +113,6 @@ function assertAcyclic(tasks) {
     visited.add(code);
   }
   for (const code of byCode.keys()) visit(code);
-}
-
-function filesRecursively(path) {
-  const files = [];
-  for (const name of readdirSync(path)) {
-    const child = join(path, name);
-    if (statSync(child).isDirectory()) files.push(...filesRecursively(child));
-    else files.push(child);
-  }
-  return files;
 }
 
 const program = readJson(PROGRAM_PATH);
@@ -137,10 +136,10 @@ for (const [index, task] of tasks.entries()) {
   assert(/^R2-(?:0[1-9]|1[0-2])$/u.test(task.code), `invalid task code at ${index}`);
   assert(!taskCodes.has(task.code), `duplicate task code ${task.code}`);
   taskCodes.add(task.code);
-  const expectedIssue = EXPECTED_TASK_ISSUES.get(task.code);
-  assert(expectedIssue !== undefined, `unregistered task ${task.code}`);
-  const expectedUrl = `https://github.com/ORESoftware/.github/issues/${expectedIssue}`;
-  assert(task.issue === expectedUrl, `task ${task.code} points to the wrong issue`);
+  const issueNumber = EXPECTED_TASK_ISSUES.get(task.code);
+  assert(issueNumber !== undefined, `unregistered task ${task.code}`);
+  assert(task.issue === `https://github.com/ORESoftware/.github/issues/${issueNumber}`,
+    `task ${task.code} points to the wrong issue`);
   assert(!issueUrls.has(task.issue), `duplicate task issue ${task.issue}`);
   issueUrls.add(task.issue);
   assert(typeof task.title === 'string' && task.title.trim() === task.title && task.title.length >= 12,
@@ -157,11 +156,10 @@ for (const [index, task] of tasks.entries()) {
 }
 assertAcyclic(tasks);
 for (const task of tasks) {
-  if (task.state === 'verified') {
-    for (const dependency of task.dependsOn) {
-      assert(tasks.find((candidate) => candidate.code === dependency).state === 'verified',
-        `${task.code} cannot be verified before ${dependency}`);
-    }
+  if (task.state !== 'verified') continue;
+  for (const dependency of task.dependsOn) {
+    assert(tasks.find((candidate) => candidate.code === dependency).state === 'verified',
+      `${task.code} cannot be verified before ${dependency}`);
   }
 }
 
@@ -183,23 +181,22 @@ for (const [index, organization] of organizations.entries()) {
   }
   assert(['blocked', 'verified'].includes(organization.documentAdmission),
     `invalid document admission state for ${organization.organization}`);
-  if (organization.documentAdmission === 'verified') {
-    for (const field of EVIDENCE_FIELDS) {
-      assert(organization[field] === 'passed',
-        `${organization.organization} cannot be admitted while ${field} is not passed`);
-    }
+  if (organization.documentAdmission !== 'verified') continue;
+  for (const field of EVIDENCE_FIELDS) {
+    assert(organization[field] === 'passed',
+      `${organization.organization} cannot be admitted while ${field} is not passed`);
   }
 }
 
 const typeSpec = readFileSync(TYPESPEC_PATH, 'utf8');
 const authored = readJson(SCHEMA_PATH);
-const typeSpecIds = [...typeSpec.matchAll(
-  /@id\("([^"]+)"\)\s*(?:enum|model|scalar|union|alias)\s+([A-Za-z_][A-Za-z0-9_]*)/gu,
-)].map((match) => [match[1], match[2]]);
-assert(typeSpecIds.length >= 8, 'TypeSpec declaration inventory is incomplete');
-assert(typeSpecIds.every(([id, declaration]) => id === declaration),
-  'TypeSpec @id must equal its declaration name');
-assert(JSON.stringify(typeSpecIds.map(([id]) => id).sort())
+const declarationNames = [...typeSpec.matchAll(
+  /^\s*(?:enum|model|scalar|union|alias)\s+([A-Za-z_][A-Za-z0-9_]*)/gmu,
+)].map((match) => match[1]);
+assert(declarationNames.length >= 8, 'TypeSpec declaration inventory is incomplete');
+assert(new Set(declarationNames).size === declarationNames.length,
+  'TypeSpec declarations must be unique');
+assert(JSON.stringify([...declarationNames].sort())
   === JSON.stringify(Object.keys(authored.$defs ?? {}).sort()),
 'TypeSpec and authored JSON Schema top-level declarations differ');
 assert(authored.$schema === 'https://json-schema.org/draft/2020-12/schema',
@@ -211,8 +208,7 @@ for (const path of corpusFiles) readJson(path);
 
 const credentialPattern = new RegExp('(?:gh' + 'p_|lin' + '_api_)[A-Za-z0-9_-]+', 'u');
 for (const path of [
-  PROGRAM_PATH, TYPESPEC_PATH, SCHEMA_PATH,
-  ...corpusFiles,
+  PROGRAM_PATH, TYPESPEC_PATH, SCHEMA_PATH, ...corpusFiles,
   join(ROOT, 'docs', 'r2-fleet-admission.md'),
   join(ROOT, '.github', 'ISSUE_TEMPLATE', 'r2_storage_admission.yml'),
   join(ROOT, '.github', 'workflows', 'r2-fleet-admission.yml'),
