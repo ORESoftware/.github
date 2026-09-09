@@ -65,6 +65,8 @@ jobs:
           node-version: 22.16.0
           check-latest: false
       - name: Compare independent TypeSpec and JSON Schema authorities
+        id: tjsv
+        continue-on-error: true
         uses: ORESoftware/typespec-json-schema-validator@85a0cd9a7dc113c6cdbb473f3b60786d032d8513
         with:
           typespec: contracts/r2-fleet-admission/main.tsp
@@ -76,23 +78,36 @@ jobs:
           quiet: 'true'
       - name: Require a zero-finding peer-authority receipt and non-editable Contract IR
         shell: bash
+        env:
+          TSJSV_STEP_OUTCOME: ${{ steps.tjsv.outcome }}
         run: |
           node --input-type=module <<'NODE'
           import { readFileSync } from 'node:fs';
-          const report = JSON.parse(readFileSync(
-            '.typespec-json-schema-validator/r2-fleet-admission.report.json',
-            'utf8',
-          ));
-          const contractIr = JSON.parse(readFileSync(
-            '.typespec-json-schema-validator/r2-fleet-admission.contract-ir.json',
-            'utf8',
-          ));
-          if (report.status !== 'passed'
+          const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
+          const report = readJson('.typespec-json-schema-validator/r2-fleet-admission.report.json');
+          const diagnostic = {
+            stepOutcome: process.env.TSJSV_STEP_OUTCOME,
+            status: report.status,
+            zeroUnexplainedFindings: report.zeroUnexplainedFindings,
+            counts: report.counts ?? null,
+            findings: Array.isArray(report.findings)
+              ? report.findings.slice(0, 20).map(({ ruleId, declaration, pointer, message }) => ({
+                  ruleId, declaration: declaration ?? null, pointer: pointer ?? null, message,
+                }))
+              : null,
+            error: report.error ?? null,
+          };
+          console.log(JSON.stringify(diagnostic, null, 2));
+          if (process.env.TSJSV_STEP_OUTCOME !== 'success'
+              || report.status !== 'passed'
               || report.zeroUnexplainedFindings !== true
               || !Array.isArray(report.findings)
               || report.findings.length !== 0) {
             throw new Error('R2 peer-authority receipt is not an exact zero-finding pass');
           }
+          const contractIr = readJson(
+            '.typespec-json-schema-validator/r2-fleet-admission.contract-ir.json',
+          );
           const authorities = contractIr.authorities ?? {};
           if (contractIr.status !== 'passed'
               || contractIr.admissible !== true
