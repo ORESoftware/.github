@@ -1,0 +1,108 @@
+name: R2 fleet admission contract
+
+on:
+  pull_request:
+    paths:
+      - 'contracts/r2-fleet-admission/**'
+      - 'docs/r2-fleet-admission.md'
+      - 'scripts/validate_r2_fleet_admission.mjs'
+      - '.github/ISSUE_TEMPLATE/r2_storage_admission.yml'
+      - '.github/workflows/r2-fleet-admission.yml'
+      - '.github/CODEOWNERS'
+      - 'README.md'
+  push:
+    branches: [main]
+    paths:
+      - 'contracts/r2-fleet-admission/**'
+      - 'docs/r2-fleet-admission.md'
+      - 'scripts/validate_r2_fleet_admission.mjs'
+      - '.github/ISSUE_TEMPLATE/r2_storage_admission.yml'
+      - '.github/workflows/r2-fleet-admission.yml'
+      - '.github/CODEOWNERS'
+      - 'README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r2-fleet-admission-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Set up pinned Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.16.0
+          check-latest: false
+      - name: Validate program invariants and public evidence boundary
+        run: node scripts/validate_r2_fleet_admission.mjs
+      - name: Reject unresolved conflict markers
+        shell: bash
+        run: "! git grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- . ':!*.lock'"
+
+  peer-authority-parity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Set up pinned Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.16.0
+          check-latest: false
+      - name: Compare independent TypeSpec and JSON Schema authorities
+        uses: ORESoftware/typespec-json-schema-validator@85a0cd9a7dc113c6cdbb473f3b60786d032d8513
+        with:
+          typespec: contracts/r2-fleet-admission/main.tsp
+          schema: contracts/r2-fleet-admission/authored.schema.json
+          instances: contracts/r2-fleet-admission/instances
+          report: .typespec-json-schema-validator/r2-fleet-admission.report.json
+          contract_ir: .typespec-json-schema-validator/r2-fleet-admission.contract-ir.json
+          output_dir: .typespec-json-schema-validator/r2-fleet-admission-generated
+          quiet: 'true'
+      - name: Require a zero-finding peer-authority receipt and non-editable Contract IR
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const report = JSON.parse(readFileSync(
+            '.typespec-json-schema-validator/r2-fleet-admission.report.json',
+            'utf8',
+          ));
+          const contractIr = JSON.parse(readFileSync(
+            '.typespec-json-schema-validator/r2-fleet-admission.contract-ir.json',
+            'utf8',
+          ));
+          if (report.status !== 'passed'
+              || report.zeroUnexplainedFindings !== true
+              || !Array.isArray(report.findings)
+              || report.findings.length !== 0) {
+            throw new Error('R2 peer-authority receipt is not an exact zero-finding pass');
+          }
+          const authorities = contractIr.authorities ?? {};
+          if (contractIr.status !== 'passed'
+              || contractIr.admissible !== true
+              || contractIr.editableAuthority !== false
+              || authorities.typespec !== 'independently-authored'
+              || authorities.jsonSchema !== 'independently-authored'
+              || authorities.generatedJsonSchema !== 'comparison-evidence-only'
+              || authorities.precedence !== 'none') {
+            throw new Error('R2 Contract IR does not preserve the peer-authority boundary');
+          }
+          NODE
+      - name: Prove generated evidence did not rewrite either authored authority
+        run: git diff --exit-code -- contracts/r2-fleet-admission/main.tsp contracts/r2-fleet-admission/authored.schema.json
