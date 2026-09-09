@@ -3,3 +3,8 @@
 /SECURITY.md @ORESoftware
 /agents.md @ORESoftware
 /AGENTS.md @ORESoftware
+/docs/r2-fleet-admission.md @ORESoftware
+/contracts/r2-fleet-admission/ @ORESoftware
+/scripts/validate_r2_fleet_admission.mjs @ORESoftware
+/.github/workflows/r2-fleet-admission.yml @ORESoftware
+/.github/ISSUE_TEMPLATE/r2_storage_admission.yml @ORESoftware
