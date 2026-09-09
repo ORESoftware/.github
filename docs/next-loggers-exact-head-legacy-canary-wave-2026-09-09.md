@@ -41,6 +41,7 @@ These are observed snapshots, not permanent release pins. Every promotion decisi
 - [#163](https://github.com/ORESoftware/.github/issues/163) — Gleam process-spawn/context repair and certification.
 - [#165](https://github.com/ORESoftware/.github/issues/165) — add an immutable, fail-closed TJSV convergence gate to the source/canary path.
 - [#166](https://github.com/ORESoftware/.github/issues/166) — extend exact-head certification to the additional red Erlang/Elixir, TypeScript-contract, and Java lanes while retaining green Node package-export checks as positive controls.
+- [#171](https://github.com/ORESoftware/.github/issues/171) — replace mutable GitHub Action tags and Node-20 action-runtime coercion with reviewed Node-24-compatible actions pinned to immutable full SHAs across the existing test-org certification fleet.
 
 Dedicated Linear child-issue creation is currently capacity-blocked, so these bounded GitHub workstreams remain linked to DEN-3959 and are recorded there rather than creating an untracked parallel queue.
 
@@ -60,18 +61,27 @@ Where this contract family participates in both authored lanes:
 
 If an independently authored authority lane is genuinely absent for this contract family, record that absence explicitly as an architecture gap. Do not synthesize one authority from the other merely to satisfy CI.
 
+## Workflow action/runtime closure
+
+The inspected legacy Go canary workflow on `main` uses mutable major tags including `actions/checkout@v4`, `actions/setup-python@v5`, and `actions/setup-go@v5`. The 2026-09-09 canary logs also warn that Node-20-based actions are deprecated and are being forced by GitHub to execute on Node 24.
+
+That is incompatible with exact-head certification as a reproducible toolchain closure: workflow action code and its JavaScript runtime can change independently of the candidate application SHA.
+
+Task #171 therefore requires the existing 22 paired consumer repositories to adopt supported Node-24-compatible action revisions pinned to reviewed 40-character SHAs. The readable upstream release/version should remain as an adjacent comment; least-privilege permissions and `persist-credentials: false` must remain intact. The evidence receipt must bind action SHAs separately from the source SHA, TJSV SHA, and native compiler/runtime versions.
+
 ## Two-stage promotion sequence
 
 1. Repair source behavior and tests semantically on the existing source repair branch, incorporating current `main` with a normal merge if synchronization is required; never rebase.
 2. Select one immutable candidate source SHA.
 3. Require all applicable source-local formatter, lint, unit, race/concurrency, contract, observability, and packaging checks at that exact SHA.
 4. Require TJSV convergence evidence at that same candidate SHA, while retaining Python JSON Schema validation as a separate witness.
-5. Repin every applicable test-org canary to that exact candidate SHA and require both the contract/TJSV path and language-native path to be green.
-6. Correct PR bodies and receipts so their documented source SHA exactly matches the tested source SHA.
-7. Merge the source PR only after candidate qualification is complete.
-8. Repin the canaries to the exact merged `main` SHA and rerun the full gates.
-9. Merge a canary PR only after its post-merge exact-head qualification is green.
-10. Record final source SHA, canary workflow-head SHA, TJSV SHA, workflow run IDs, conclusions, and any intentional `STOPPED_FOR_EVALUATION` state in DEN-3959 and this ledger.
+5. Require the exact-head workflow/toolchain closure, including immutable action SHAs, at that same qualification point.
+6. Repin every applicable test-org canary to that exact candidate SHA and require both the contract/TJSV path and language-native path to be green.
+7. Correct PR bodies and receipts so their documented source SHA exactly matches the tested source SHA.
+8. Merge the source PR only after candidate qualification is complete.
+9. Repin the canaries to the exact merged `main` SHA and rerun the full gates.
+10. Merge a canary PR only after its post-merge exact-head qualification is green.
+11. Record final source SHA, canary workflow-head SHA, TJSV SHA, action SHAs, workflow run IDs, conclusions, and any intentional `STOPPED_FOR_EVALUATION` state in DEN-3959 and this ledger.
 
 ## `STOPPED_FOR_EVALUATION` conditions
 
@@ -82,7 +92,8 @@ Do not convert any of the following into an implicit success or a skipped green 
 - a cross-language API incompatibility whose intended public semantics cannot be established from contracts, history, and sibling runtimes;
 - an unsupported runtime/toolchain path that lacks a semantics-preserving replacement;
 - a candidate source SHA that differs from the SHA recorded in the evidence receipt;
-- a mutable source or TJSV reference used as a release gate.
+- a mutable source, TJSV, or GitHub Action reference used as a release gate;
+- a deprecated action runtime that GitHub must coerce to a different runtime outside the repository's pinned evidence closure.
 
 Each stopped state needs an exact reason, owner, evidence link, and non-bypass remediation path.
 
