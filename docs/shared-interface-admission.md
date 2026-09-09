@@ -194,8 +194,8 @@ Shared-interface work frequently collides with fast-moving source/validator bran
 ## 12. Current rollout checkpoint (2026-09-09)
 
 - `ORESoftware/ores-interfaces#2`: semantically reconciled and merged; unique raw JSON exponent-number regression retained after exact-head Ubuntu/macOS admission passed.
-- `ORESoftware/ores-interfaces#6`: converging the shared package onto the newer source-owned TJSV source-lock closure; packed-consumer source-lock preservation is the immediate blocker/fix.
-- `ORESoftware/ores-cli#40`: downstream immutable shared-interface consumer; keep draft until the shared package has a merged stable revision and executable consumer evidence.
-- `ORESoftware/ores-cli#42`: independently advances the installed TJSV revision, demonstrating why the pin-convergence/channel policy above is required.
+- `ORESoftware/ores-interfaces#6`: merged at `63802209da9e08ab54fec1c34a69cc0d58607377` after Ubuntu 24.04 and macOS 14 passed the complete source-lock closure, package-consumer, fresh package, and unchanged-checkout gates; Linux also passed Zed validation/task execution.
+- `ORESoftware/ores-cli#40`: downstream immutable shared-interface consumer, now pinned to merged shared package `63802209da9e08ab54fec1c34a69cc0d58607377`; keep draft until its exact-head consumer/application evidence executes rather than ending as a zero-step private Actions job.
+- `ORESoftware/ores-cli#42`: independently advances the installed TJSV revision beyond the current shared-package checkpoint, demonstrating why the pin-convergence/channel policy above is required before independent pin updates are treated as automatically compatible.
 
-The current Linear project is `github.com/ORESoftware`; broad related tracking includes DEN-3958, DEN-3959, DEN-3828, DEN-3830, DEN-390, DEN-637, DEN-2050, DEN-2843, and DEN-3043.
+The current Linear project is `github.com/ORESoftware`; the project document `Shared interface admission + TJSV convergence follow-through` carries the issue-ready follow-up queue while new Linear issue creation is quota-blocked. Broad related tracking includes DEN-3958, DEN-3959, DEN-3828, DEN-3830, DEN-390, DEN-637, DEN-2050, DEN-2843, and DEN-3043.
