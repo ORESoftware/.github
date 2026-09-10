@@ -42,6 +42,9 @@ jobs:
           lines = src[start:end].splitlines()
           normalized = []
           for line in lines:
+              if line == '':
+                  normalized.append('')
+                  continue
               if not line.startswith('          '):
                   raise SystemExit(f'unexpected validator indentation: {line!r}')
               normalized.append(line[10:])
