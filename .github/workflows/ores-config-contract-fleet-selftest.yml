@@ -67,9 +67,10 @@ jobs:
             'rateLimit': ('ores-rate-limit/ores-rl-interfaces', '241353d0f5269450690d9646be03db2aba59a2ae'),
             'lru': ('ores-redis-lru-cache/ores-lru-redis-interfaces', '4474d240b38a4fe1dd24f01dcd2e9ab7a4c34b27'),
             'sharedAuth': ('shared-auth/shared-auth-interfaces', '52b7ac7fbf0c7c169684f613eda923f3aa6c82e9'),
-            'rpc': ('ORESoftware/api-docs', '802d655357ec4d4b3bb8ec07acb9250bc033b17c'),
+            'rpc': ('ORESoftware/api-docs', '12127a82ff1c0c34096faaf6df1a2a8484ea2feb'),
             'flags2env': ('flags-2-env/flags-2-env', 'c7f720d7501921b5a1b42c395b5a6fe271f24332'),
             'tjsv': ('ORESoftware/typespec-json-schema-validator', 'a4b731fbf82c4d162abd74fd03758fa32bb76176'),
+            'rpcTjsv': ('ORESoftware/typespec-json-schema-validator', 'd60d0d79d83e075077382623ec9e23a401ab601f'),
           }
           lock = {'schemaVersion': 1, 'authorities': {k: {'repository': r, 'revision': s} for k,(r,s) in pins.items()}}
           shared = '''schema_version = 1
