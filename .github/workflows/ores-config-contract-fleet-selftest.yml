@@ -61,9 +61,9 @@ jobs:
           required = [
               'expected_mode:',
               'required_configs:',
-              "if: ${{ hashFiles('.ores-mw.toml') != '' }}",
-              "if: ${{ hashFiles('.ores-rpc.toml') != '' }}",
-              "if: ${{ hashFiles('.fanwaave-cfg.toml') != '' }}",
+              "hashFiles('.ores-mw.toml')",
+              "hashFiles('.ores-rpc.toml')",
+              "hashFiles('.fanwaave-cfg.toml')",
               'client-only', 'server-only', 'hybrid', 'combined',
               'secret env binding cannot have default',
               'cross-family mode drift',
