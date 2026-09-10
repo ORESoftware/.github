@@ -128,13 +128,22 @@ jobs:
               raise SystemExit(f'authority lock mismatch for {key}')
 
           env_key = re.compile(r'^[A-Z_][A-Z0-9_]*$')
-          required = ['.ores-mw.toml', '.ores-rl.toml', '.ores-lru.toml', '.auth-shared.toml', '.ores-rpc.toml']
+          required = ['.ores-mw.toml', '.ores-rl.toml', '.ores-lru.toml', '.ores-rpc.toml']
           docs = {}
           for path in required:
             p = Path(path)
             if not p.is_file() or p.is_symlink():
               raise SystemExit(f'{path} must be a regular committed file')
             docs[path] = tomllib.loads(p.read_text())
+
+          auth_alias = Path('.auth-shared.toml')
+          auth_canonical = Path('.shared-auth.toml')
+          if auth_alias.exists() == auth_canonical.exists():
+            raise SystemExit('exactly one of .auth-shared.toml or .shared-auth.toml must exist')
+          auth_path = auth_canonical if auth_canonical.exists() else auth_alias
+          if not auth_path.is_file() or auth_path.is_symlink():
+            raise SystemExit('Shared Auth config must be a regular committed file')
+          auth = tomllib.loads(auth_path.read_text())
 
           mw = docs['.ores-mw.toml']
           if mw.get('schema_version') != 1 or mw.get('repository_mode') != 'server-only':
@@ -166,14 +175,11 @@ jobs:
           if any('://' in str(v) for v in redis.values()):
             raise SystemExit('.ores-lru.toml must not contain a literal Redis URL')
 
-          auth = docs['.auth-shared.toml']
-          if Path('.shared-auth.toml').exists():
-            raise SystemExit('use exactly one Shared Auth config filename; alias + canonical together is forbidden')
           compat = auth.get('compatibility', {})
           if auth.get('schema_version') != 1 or compat.get('repository') != 'https://github.com/shared-auth/shared-auth-interfaces':
-            raise SystemExit('.auth-shared.toml compatibility authority is invalid')
+            raise SystemExit('Shared Auth compatibility authority is invalid')
           if compat.get('commit') != '52b7ac7fbf0c7c169684f613eda923f3aa6c82e9':
-            raise SystemExit('.auth-shared.toml must pin the reviewed Shared Auth authority')
+            raise SystemExit('Shared Auth config must pin the reviewed authority')
 
           rpc = docs['.ores-rpc.toml']
           if rpc.get('schema_version') != 1 or rpc.get('mode') != 'server' or rpc.get('strict') is not True:
