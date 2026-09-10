@@ -1,0 +1,50 @@
+name: den-3959-run-config-reconciler-v2
+
+on:
+  push:
+    branches: [den-3959-reusable-config-contracts]
+    paths:
+      - '.github/workflows/den-3959-run-config-reconciler-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: den-3959-reusable-config-contracts
+          persist-credentials: true
+          fetch-depth: 1
+          show-progress: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Scope the transient RPC-dialect postcondition and reconcile
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/den-3959-reconcile-config-gate.py')
+          text=p.read_text()
+          old='''    if "doc.get('schema_version')" in fleet or "doc.get('mode')" in fleet:\n        raise SystemExit('superseded #81 RPC dialect survived reusable gate')\n'''
+          new='''    rpc_start = fleet.index('          def validate_rpc(doc, root):\\n')\n    rpc_end = fleet.index('          def validate_fanwaave(doc, root):\\n', rpc_start)\n    rpc_block = fleet[rpc_start:rpc_end]\n    if "doc.get('schema_version')" in rpc_block or "doc.get('mode')" in rpc_block:\n        raise SystemExit('superseded #81 RPC dialect survived reusable RPC validator')\n'''
+          if old not in text:
+              raise SystemExit('transient postcondition anchor missing')
+          p.write_text(text.replace(old,new,1))
+          PY
+          python3 -m py_compile scripts/den-3959-reconcile-config-gate.py
+          python3 scripts/den-3959-reconcile-config-gate.py
+      - name: Remove one-shot helpers and commit reconciled production files
+        run: |
+          rm -f .github/workflows/den-3959-canonical-rpc-gate-patch.yml
+          rm -f .github/workflows/den-3959-run-config-reconciler.yml
+          rm -f .github/workflows/den-3959-run-config-reconciler-v2.yml
+          rm -f scripts/den-3959-reconcile-config-gate.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A -- .github/workflows/ores-config-contract-fleet.yml .github/workflows/ores-config-contract-fleet-selftest.yml .github/workflows/den-3959-canonical-rpc-gate-patch.yml .github/workflows/den-3959-run-config-reconciler.yml .github/workflows/den-3959-run-config-reconciler-v2.yml scripts/den-3959-reconcile-config-gate.py
+          git commit -m 'DEN-3959: bind fleet gate to merged RPC authority'
+          git push origin HEAD:den-3959-reusable-config-contracts
