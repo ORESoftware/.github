@@ -1,0 +1,13 @@
+{
+  "name": "@oresoftware/cli-portability-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "cli-portability-fixture": "bin/fixture.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/fixture.test.mjs",
+    "build": "node --check bin/fixture.mjs"
+  }
+}
