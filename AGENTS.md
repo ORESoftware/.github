@@ -6,7 +6,11 @@ The machine-readable authority is [`deprecated-repositories.json`](deprecated-re
 - `ORESoftware/ai-agent-bridge.rs` → `agent-pontifex/ai-agent-bridge.rs`
 - `ORESoftware/shared-auth-server.rs` → `shared-auth/shared-auth-server.rs`
 
-Route all new feature, release, and deployment work to the exact canonical repository. In a deprecated repository, work is restricted to deprecation maintenance, security remediation, migration support, narrowly scoped compatibility, and historical reference. A legacy-repository task does not implicitly authorize edits in its successor.
+Route all new feature, release, and deployment work to the exact canonical
+repository. In a deprecated repository, work is restricted to deprecation
+maintenance, security remediation, migration support, narrowly scoped
+compatibility, and historical reference. A legacy-repository task does not
+implicitly authorize edits in its successor.
 
 # Account-level `.github` agent instructions
 
