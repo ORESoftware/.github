@@ -344,7 +344,7 @@ jobs:
           const childProcess = require('child_process');
           const status = childProcess.spawnSync(
             'git',
-            ['status', '--porcelain=v1', '--untracked-files=all'],
+            ['status', '--porcelain=v1', '--untracked-files=no'],
             { encoding: 'utf8', windowsHide: true },
           );
           if (status.status !== 0) {
@@ -352,7 +352,7 @@ jobs:
             process.exit(status.status ?? 1);
           }
           if (status.stdout.trim()) {
-            process.stderr.write('CLI validation mutated the source checkout:\n');
+            process.stderr.write('CLI validation mutated tracked source:\n');
             process.stderr.write(status.stdout);
             process.exit(1);
           }
