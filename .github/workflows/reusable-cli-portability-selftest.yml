@@ -1,0 +1,28 @@
+name: reusable CLI portability self-test
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/reusable-cli-portability.yml
+      - .github/workflows/reusable-cli-portability-selftest.yml
+      - fixtures/cli-portability-node/**
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/reusable-cli-portability.yml
+      - .github/workflows/reusable-cli-portability-selftest.yml
+      - fixtures/cli-portability-node/**
+
+permissions:
+  contents: read
+
+jobs:
+  node-fixture:
+    uses: ./.github/workflows/reusable-cli-portability.yml
+    with:
+      language: node
+      working-directory: fixtures/cli-portability-node
+      node-version: '22'
+      node-package-manager: npm
+      run-smoke: true
