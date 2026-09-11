@@ -14,9 +14,14 @@ Explain API/data/configuration changes, security implications, rollout, migratio
 
 When conflicts were present, summarize both sides' intent and how the final implementation preserves or deliberately supersedes each part.
 
+## Superseded work and salvage
+
+If this change supersedes, closes, or makes another PR obsolete, link that PR and record the salvage pass. Carry at least one concrete artifact forward when one remains useful (for example a test, fixture, edge case, error message, config default, lockfile pin, permission narrowing, or documentation detail). If nothing is salvageable, record what was examined and why no artifact should survive.
+
 - [ ] No secrets or private data are included.
 - [ ] Documentation and tests reflect the final contract.
 - [ ] The exact proposed head was verified.
+- [ ] Any superseded/closed PRs received a recorded salvage pass, with retained artifacts or an explicit no-salvage rationale.
 
 <!-- ore-org-baseline:begin -->
 ## Summary
@@ -58,4 +63,5 @@ List exact commands, environments, and results. Include unit, integration, contr
 - [ ] Explicit least-privilege workflow permissions and timeouts
 - [ ] No credentials, private data, or sensitive logs included
 - [ ] Authoritative remote branch/PR/check evidence verified
+- [ ] Any superseded or abandoned PR was salvaged per `docs/pr-salvage-policy.md`, or its closing rationale records why no unique artifact remained
 <!-- ore-org-baseline:end -->
