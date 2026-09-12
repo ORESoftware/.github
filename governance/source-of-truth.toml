@@ -1,0 +1,141 @@
+schemaVersion = "ores.organization-source-of-truth.v1"
+revision = 1
+organization = "ORESoftware"
+authorityRepository = "ORESoftware/.github"
+canonicalPath = "governance/source-of-truth.toml"
+synchronizationPolicy = "append-only"
+reviewedAt = "2026-09-07T21:35:50Z"
+linearIssue = "DEN-3954"
+githubIssue = "ORESoftware/.github#30"
+
+[[repositories]]
+role = "canonical"
+repository = "ORESoftware/.github"
+required = true
+status = "drift"
+expectedVisibility = "private"
+observedVisibility = "public"
+manifestPath = "governance/source-of-truth.toml"
+mirrorMode = "full"
+evidence = "GitHub repository metadata observed 2026-09-07; visibility correction requires an administrative path."
+
+[[repositories]]
+role = "documentation"
+repository = "ORESoftware/oresoftware-docs"
+required = true
+status = "missing"
+expectedVisibility = "private"
+observedVisibility = "unknown"
+manifestPath = "governance/source-of-truth.toml"
+mirrorMode = "pointer"
+evidence = "GitHub returned 404 for the exact canonical documentation repository name on 2026-09-07."
+
+[[repositories]]
+role = "marketing"
+repository = "ORESoftware/oresoftware.github.io"
+required = true
+status = "verified"
+expectedVisibility = "public"
+observedVisibility = "public"
+manifestPath = "governance/source-of-truth.toml"
+mirrorMode = "pointer"
+evidence = "GitHub repository metadata observed 2026-09-07."
+
+[[repositories]]
+role = "mcpServer"
+repository = "ORESoftware/ores-mcp-server.rs"
+required = true
+status = "missing"
+expectedVisibility = "private"
+observedVisibility = "unknown"
+manifestPath = "governance/source-of-truth.toml"
+mirrorMode = "pointer"
+evidence = "GitHub returned 404 for the exact owner-level MCP server repository name on 2026-09-07."
+
+[[repositories]]
+role = "cli"
+repository = "ORESoftware/ores-cli"
+required = true
+status = "verified"
+expectedVisibility = "private"
+observedVisibility = "private"
+manifestPath = "governance/source-of-truth.toml"
+mirrorMode = "pointer"
+evidence = "GitHub repository metadata and open alignment work observed 2026-09-07."
+
+[[repositories]]
+role = "other"
+repository = "ORESoftware/mcp-rust-libs"
+required = true
+status = "verified"
+expectedVisibility = "public"
+observedVisibility = "public"
+manifestPath = "governance/source-of-truth.toml"
+mirrorMode = "pointer"
+evidence = "Shared MCP runtime repository observed 2026-09-07; it does not replace the missing owner-level MCP server."
+
+[[repositories]]
+role = "other"
+repository = "ORESoftware/api-docs"
+required = true
+status = "verified"
+expectedVisibility = "public"
+observedVisibility = "public"
+manifestPath = "governance/source-of-truth.toml"
+mirrorMode = "pointer"
+evidence = "Cross-organization API documentation generator repository observed 2026-09-07; it does not replace the missing private owner documentation repository."
+
+[[mappings]]
+kind = "linearProject"
+identifier = "https://linear.app/denman/project/githubcomoresoftware-1574ce77fadf"
+status = "verified"
+evidence = "Linear project fetched through the connected Linear workspace on 2026-09-07."
+
+[[mappings]]
+kind = "githubProject"
+identifier = "https://github.com/users/ORESoftware/projects/1"
+status = "unverified"
+note = "Expected primary project URL by current convention; the connected GitHub tool exposes no Projects-v2 read/write operation."
+
+[[mappings]]
+kind = "supabaseOrganization"
+identifier = "zmkmcdyrryxxhleytdho"
+status = "verified"
+evidence = "Recorded in the ORESoftware Linear project provider inventory under DEN-3146."
+
+[[mappings]]
+kind = "supabaseNamespace"
+identifier = "oresoftware/{canonical,auth,admin}"
+status = "declared"
+note = "Near-term shared-Supabase exception; each application must remain isolated by schema and runtime configuration. Exact project creation remains incomplete."
+
+[[mappings]]
+kind = "neonOrganization"
+identifier = "org-summer-band-74622163"
+status = "verified"
+evidence = "Recorded in the ORESoftware Linear project provider inventory under DEN-3146."
+
+[[mappings]]
+kind = "cloudflareDomain"
+status = "blocked"
+note = "No matching owned ORESoftware apex domain was identified in the current account inventory; do not invent one."
+
+[[mappings]]
+kind = "gcpProject"
+identifier = "oresoftware"
+status = "verified"
+evidence = "Linear provider inventory records the project ACTIVE; billing and application deployment are not certified."
+
+[[mappings]]
+kind = "slackChannel"
+identifier = "https://app.slack.com/client/T01B3C83PMK/C0BKP2N3LG7"
+status = "verified"
+evidence = "Recorded in the ORESoftware Linear project provider inventory."
+
+[[supersessions]]
+sequence = 1
+recordedAt = "2026-09-07T21:35:50Z"
+formerStatement = "Linear projects, the .github repository, primary GitHub Project issues, and the *-docs repository operate as four coequal sources of truth."
+replacementStatement = "The private owner-level .github repository is canonical; Linear, GitHub Projects, *-docs, marketing, MCP, CLI, and provider/channel mappings are synchronized planning, delivery, or publication surfaces."
+reason = "Resolve ambiguous authority while preserving all historical direction and requiring append-only reconciliation."
+evidence = "DEN-3954 and ORESoftware/.github#30"

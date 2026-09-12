@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.oresoftware.com/governance/organization-source-of-truth.v1.schema.json",
+  "title": "ORE organization source-of-truth manifest",
+  "description": "Independent JSON Schema authority for the canonical organization mapping and append-only reconciliation contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "revision",
+    "organization",
+    "authorityRepository",
+    "canonicalPath",
+    "synchronizationPolicy",
+    "reviewedAt",
+    "repositories",
+    "mappings",
+    "supersessions"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "ores.organization-source-of-truth.v1"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "organization": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$"
+    },
+    "authorityRepository": {
+      "$ref": "#/$defs/repositoryName"
+    },
+    "canonicalPath": {
+      "type": "string",
+      "const": "governance/source-of-truth.toml"
+    },
+    "synchronizationPolicy": {
+      "type": "string",
+      "const": "append-only"
+    },
+    "reviewedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "linearIssue": {
+      "type": "string",
+      "pattern": "^DEN-[1-9][0-9]*$"
+    },
+    "githubIssue": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#[1-9][0-9]*$"
+    },
+    "repositories": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/repositorySurface"
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "required": ["role"],
+            "properties": {
+              "role": { "const": "canonical" }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["role"],
+            "properties": {
+              "role": { "const": "documentation" }
+            }
+          },
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["role"],
+            "properties": {
+              "role": { "const": "marketing" }
+            }
+          },
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["role"],
+            "properties": {
+              "role": { "const": "mcpServer" }
+            }
+          },
+          "minContains": 1
+        }
+      ]
+    },
+    "mappings": {
+      "type": "array",
+      "minItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/externalMapping"
+      },
+      "allOf": [
+        { "$ref": "#/$defs/requiresLinearProject" },
+        { "$ref": "#/$defs/requiresGithubProject" },
+        { "$ref": "#/$defs/requiresSupabase" },
+        { "$ref": "#/$defs/requiresNeon" },
+        { "$ref": "#/$defs/requiresCloudflare" },
+        { "$ref": "#/$defs/requiresGcp" },
+        { "$ref": "#/$defs/requiresSlack" }
+      ]
+    },
+    "supersessions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/supersession"
+      }
+    }
+  },
+  "$defs": {
+    "resourceStatus": {
+      "type": "string",
+      "enum": ["verified", "declared", "drift", "missing", "blocked", "unverified"]
+    },
+    "visibility": {
+      "type": "string",
+      "enum": ["public", "private", "internal", "unknown"]
+    },
+    "repositoryName": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    },
+    "repositoryRole": {
+      "type": "string",
+      "enum": [
+        "canonical",
+        "documentation",
+        "marketing",
+        "mcpServer",
+        "cli",
+        "interfaces",
+        "clients",
+        "monorepo",
+        "infrastructure",
+        "desktopRust",
+        "flutter",
+        "lambdas",
+        "apiServer",
+        "adminApiServer",
+        "webServer",
+        "adminWebServer",
+        "libCore",
+        "ormCore",
+        "pubLibCore",
+        "sync",
+        "other"
+      ]
+    },
+    "repositorySurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "repository", "required", "status"],
+      "properties": {
+        "role": { "$ref": "#/$defs/repositoryRole" },
+        "repository": { "$ref": "#/$defs/repositoryName" },
+        "required": { "type": "boolean" },
+        "status": { "$ref": "#/$defs/resourceStatus" },
+        "expectedVisibility": { "$ref": "#/$defs/visibility" },
+        "observedVisibility": { "$ref": "#/$defs/visibility" },
+        "manifestPath": { "type": "string", "minLength": 1 },
+        "mirrorMode": { "type": "string", "enum": ["full", "pointer", "none"] },
+        "evidence": { "type": "string", "minLength": 1 }
+      }
+    },
+    "mappingKind": {
+      "type": "string",
+      "enum": [
+        "linearProject",
+        "githubProject",
+        "supabaseOrganization",
+        "supabaseNamespace",
+        "neonOrganization",
+        "cloudflareDomain",
+        "gcpProject",
+        "slackChannel"
+      ]
+    },
+    "externalMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "status"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/mappingKind" },
+        "identifier": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/resourceStatus" },
+        "evidence": { "type": "string", "minLength": 1 },
+        "note": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["status"],
+            "properties": {
+              "status": { "enum": ["verified", "declared", "drift"] }
+            }
+          },
+          "then": {
+            "required": ["identifier"]
+          }
+        }
+      ]
+    },
+    "supersession": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "recordedAt",
+        "formerStatement",
+        "replacementStatement",
+        "reason",
+        "evidence"
+      ],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 1 },
+        "recordedAt": { "type": "string", "format": "date-time" },
+        "formerStatement": { "type": "string", "minLength": 1 },
+        "replacementStatement": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "string", "minLength": 1 }
+      }
+    },
+    "requiresLinearProject": {
+      "contains": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "linearProject" } }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "requiresGithubProject": {
+      "contains": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "githubProject" } }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "requiresSupabase": {
+      "contains": {
+        "required": ["kind"],
+        "properties": {
+          "kind": { "enum": ["supabaseOrganization", "supabaseNamespace"] }
+        }
+      },
+      "minContains": 1
+    },
+    "requiresNeon": {
+      "contains": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "neonOrganization" } }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "requiresCloudflare": {
+      "contains": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "cloudflareDomain" } }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "requiresGcp": {
+      "contains": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "gcpProject" } }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "requiresSlack": {
+      "contains": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "slackChannel" } }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    }
+  }
+}
